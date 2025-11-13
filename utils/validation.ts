@@ -1,6 +1,7 @@
 import { Occurrence, OccurrenceType } from '../types';
 
-type FormData = Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status'>;
+// FIX: Omit 'auditLog' as it's not present in the form data for a new occurrence.
+type FormData = Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>;
 
 export interface ValidationErrors {
   schoolUnit?: string;

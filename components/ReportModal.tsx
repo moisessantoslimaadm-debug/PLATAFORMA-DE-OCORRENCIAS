@@ -7,7 +7,7 @@ import { CheckboxInput } from './CheckboxInput';
 export interface ReportOptions {
   format: 'pdf' | 'excel';
   columns: string[];
-  groupBy: 'none' | 'status' | 'occurrenceDate' | 'mainType';
+  groupBy: 'none' | 'status' | 'schoolUnit' | 'occurrenceDate' | 'mainType' | 'student.fullName';
 }
 
 interface ReportModalProps {
@@ -19,7 +19,14 @@ interface ReportModalProps {
 const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf');
   const [selectedColumns, setSelectedColumns] = useState<string[]>(REPORT_COLUMNS.map(c => c.key));
-  const [groupBy, setGroupBy] = useState<'none' | 'status' | 'occurrenceDate' | 'mainType'>('none');
+  const [groupBy, setGroupBy] = useState<ReportOptions['groupBy']>('none');
+
+  const handleFormatChange = (newFormat: 'pdf' | 'excel') => {
+    setFormat(newFormat);
+    if (newFormat === 'pdf' && groupBy === 'student.fullName') {
+      setGroupBy('none'); // Reset if student grouping is not applicable for PDF
+    }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -58,11 +65,11 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSubmit }) 
             <legend className="text-md font-semibold text-gray-800 mb-2">1. Escolha o Formato</legend>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 p-3 border rounded-md has-[:checked]:bg-green-50 has-[:checked]:border-green-500">
-                <input type="radio" name="format" value="pdf" checked={format === 'pdf'} onChange={() => setFormat('pdf')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
+                <input type="radio" name="format" value="pdf" checked={format === 'pdf'} onChange={() => handleFormatChange('pdf')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
                 <span>PDF</span>
               </label>
               <label className="flex items-center gap-2 p-3 border rounded-md has-[:checked]:bg-green-50 has-[:checked]:border-green-500">
-                <input type="radio" name="format" value="excel" checked={format === 'excel'} onChange={() => setFormat('excel')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
+                <input type="radio" name="format" value="excel" checked={format === 'excel'} onChange={() => handleFormatChange('excel')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
                 <span>Excel</span>
               </label>
             </div>
@@ -106,6 +113,10 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSubmit }) 
                 <span>Status</span>
               </label>
               <label className="flex items-center gap-2 p-2 border rounded-md text-sm has-[:checked]:bg-green-50 has-[:checked]:border-green-500">
+                <input type="radio" name="groupBy" value="schoolUnit" checked={groupBy === 'schoolUnit'} onChange={() => setGroupBy('schoolUnit')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
+                <span>Unidade Escolar</span>
+              </label>
+              <label className="flex items-center gap-2 p-2 border rounded-md text-sm has-[:checked]:bg-green-50 has-[:checked]:border-green-500">
                 <input type="radio" name="groupBy" value="occurrenceDate" checked={groupBy === 'occurrenceDate'} onChange={() => setGroupBy('occurrenceDate')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
                 <span>Data da Ocorrência</span>
               </label>
@@ -113,6 +124,12 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSubmit }) 
                 <input type="radio" name="groupBy" value="mainType" checked={groupBy === 'mainType'} onChange={() => setGroupBy('mainType')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
                 <span>Tipo Principal</span>
               </label>
+              {format === 'excel' && (
+                <label className="flex items-center gap-2 p-2 border rounded-md text-sm has-[:checked]:bg-green-50 has-[:checked]:border-green-500">
+                  <input type="radio" name="groupBy" value="student.fullName" checked={groupBy === 'student.fullName'} onChange={() => setGroupBy('student.fullName')} className="h-4 w-4 text-green-600 focus:ring-green-500"/>
+                  <span>Aluno (Aba Individual)</span>
+                </label>
+              )}
             </div>
           </fieldset>
         </div>

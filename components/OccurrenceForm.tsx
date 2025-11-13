@@ -8,7 +8,7 @@ import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
 import { validateOccurrence, ValidationErrors, validateStep } from '../utils/validation';
 import { MultiSelectTagInput } from './MultiSelectTagInput';
 import { UserCircleIcon } from './icons/UserCircleIcon';
-import { Stepper } from './Stepper';
+import { FormTabs } from './FormTabs';
 
 interface OccurrenceFormProps {
   onSubmit: (data: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => void;
@@ -51,6 +51,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
   
   const steps = [
     { name: 'Passo 1', description: 'Identificação do Aluno' },
@@ -102,7 +103,9 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
     const stepErrors = validateStep(formData, currentStep);
     setErrors(stepErrors);
     if (Object.keys(stepErrors).length === 0 && currentStep < totalSteps) {
-        setCurrentStep(prev => prev + 1);
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
+        setVisitedSteps(prev => new Set(prev).add(nextStep));
     }
   };
 
@@ -118,16 +121,25 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
     const validationErrors = validateOccurrence(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      // Find the first step with an error and navigate to it
+      const firstErrorKey = Object.keys(validationErrors)[0];
+      const firstSubErrorKey = (typeof validationErrors[firstErrorKey] === 'object') ? Object.keys(validationErrors[firstErrorKey] as object)[0] : '';
+      const fullKey = firstSubErrorKey ? `${firstErrorKey}.${firstSubErrorKey}` : firstErrorKey;
+      
+      if (['schoolUnit', 'student.fullName', 'student.birthDate', 'student.grade', 'student.shift'].some(key => fullKey.startsWith(key.split('.')[0]))) setCurrentStep(1);
+      else if (['guardian.fullName', 'guardian.phone', 'guardian.address', 'occurrenceDate', 'occurrenceTime', 'location', 'occurrenceTypes', 'otherOccurrenceType'].some(key => fullKey.startsWith(key.split('.')[0]))) setCurrentStep(2);
+      else if (['detailedDescription', 'involvedPeople', 'immediateActions'].includes(firstErrorKey)) setCurrentStep(3);
       return;
     }
     setErrors({});
     onSubmit(formData);
     setFormData(initialFormData);
     setCurrentStep(1);
+    setVisitedSteps(new Set([1]));
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 animate-fade-in max-w-4xl mx-auto">
+    <div className="bg-white/70 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/30 animate-fade-in max-w-4xl mx-auto">
       <div className="text-center mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
             Ficha de Registro de Ocorrência
@@ -137,12 +149,19 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
           </p>
       </div>
       
-      <div className="mb-8 p-4">
-        <Stepper steps={steps} currentStep={currentStep} />
+      <div className="mb-8 px-4">
+         <div className="overflow-x-auto pb-2">
+            <FormTabs 
+              steps={steps} 
+              currentStep={currentStep} 
+              visitedSteps={visitedSteps}
+              setCurrentStep={setCurrentStep}
+            />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 px-4">
-        <div className="animate-fade-in">
+        <div className="animate-fade-in min-h-[450px]">
           {currentStep === 1 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">Cabeçalho e Identificação do Aluno</h2>
@@ -229,7 +248,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
         <div className="pt-6 flex justify-between items-center">
           <div>
             {currentStep > 1 && (
-              <button type="button" onClick={handlePrev} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <button type="button" onClick={handlePrev} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white">
                 Anterior
               </button>
             )}

@@ -84,7 +84,7 @@ export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[
             groupedData[key].push(occ);
         });
 
-        const groupingLabel = groupBy === 'status' ? 'Status' : groupBy === 'occurrenceDate' ? 'Data' : 'Tipo Principal';
+        const groupingLabel = REPORT_COLUMNS.find(c => c.key === groupBy)?.label || 'Grupo';
 
         for (const groupName in groupedData) {
             if (startY > 250) {
@@ -112,14 +112,32 @@ export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[
     doc.save('relatorio_ocorrencias.pdf');
 };
 
+const fitToColumn = (dataToExport: Record<string, string>[], headers: string[]) => {
+    const columnWidths = headers.map(header => ({
+        wch: header.length
+    }));
+    
+    dataToExport.forEach(row => {
+        headers.forEach((header, i) => {
+            const cellValue = row[header] ? String(row[header]) : '';
+            const cellLength = cellValue.split('\n')[0].length; // Use first line for width calculation
+            if (columnWidths[i].wch < cellLength) {
+                columnWidths[i].wch = cellLength;
+            }
+        });
+    });
+    // Add padding and set max width
+    return columnWidths.map(col => ({ wch: Math.min(col.wch + 2, 80) }));
+};
+
 
 // Generates an Excel sheet with detailed data for multiple occurrences
 export const generateExcelReport = (occurrences: Occurrence[], columnKeys: string[], groupBy: string): void => {
     const selectedColumns = REPORT_COLUMNS.filter(c => columnKeys.includes(c.key));
-
     const workbook = window.XLSX.utils.book_new();
 
     const generateSheetForData = (data: Occurrence[], sheetName: string) => {
+        const headers = selectedColumns.map(c => c.label);
         const dataToExport = data.map(occ => {
             const row: Record<string, string> = {};
             selectedColumns.forEach(col => {
@@ -130,8 +148,8 @@ export const generateExcelReport = (occurrences: Occurrence[], columnKeys: strin
 
         if (dataToExport.length === 0) return;
 
-        const worksheet = window.XLSX.utils.json_to_sheet(dataToExport);
-        worksheet["!cols"] = selectedColumns.map(c => ({ wch: Math.max(c.label.length, 25) }));
+        const worksheet = window.XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+        worksheet["!cols"] = fitToColumn(dataToExport, headers);
         window.XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     };
 
@@ -139,9 +157,13 @@ export const generateExcelReport = (occurrences: Occurrence[], columnKeys: strin
         const groupedData: Record<string, Occurrence[]> = {};
          occurrences.forEach(occ => {
             let key = '';
-            if (groupBy === 'occurrenceDate') key = formatDate(occ.occurrenceDate);
-            else if (groupBy === 'mainType') key = occ.occurrenceTypes[0] || 'Não especificado';
-            else key = getNestedProperty(occ, groupBy);
+            if (groupBy === 'occurrenceDate') {
+                key = formatDate(occ.occurrenceDate);
+            } else if (groupBy === 'mainType') {
+                key = occ.occurrenceTypes[0] || 'Não especificado';
+            } else {
+                key = getNestedProperty(occ, groupBy);
+            }
             
             if (!groupedData[key]) {
                 groupedData[key] = [];
@@ -150,7 +172,7 @@ export const generateExcelReport = (occurrences: Occurrence[], columnKeys: strin
         });
 
         for (const groupName in groupedData) {
-            // Sanitize sheet name for Excel
+            // Sanitize sheet name for Excel (max 31 chars, no special chars)
             const safeSheetName = groupName.replace(/[:\\/?*[\]]/g, '').substring(0, 31);
             generateSheetForData(groupedData[groupName], safeSheetName);
         }
