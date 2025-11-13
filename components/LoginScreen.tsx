@@ -28,6 +28,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
       <div className="w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-xl border border-gray-200">
         <div className="px-6 py-8">
+          <div className="text-center text-gray-600 mb-6">
+            <p className="font-semibold">Prefeitura Municipal de Itaberaba</p>
+            <p className="text-sm">Secretaria Municipal de Educação – SMED</p>
+            <p className="text-sm">Coordenação de Gestão do Ensino e de Ações Socioeducativas</p>
+          </div>
           <h2 className="text-2xl font-bold text-center text-gray-700">Acesso Restrito</h2>
           <p className="mt-1 text-center text-gray-500">
             Plataforma de Registro de Ocorrências

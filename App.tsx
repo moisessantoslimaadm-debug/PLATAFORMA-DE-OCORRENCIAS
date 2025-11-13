@@ -19,9 +19,11 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
     try {
-      const savedOccurrences = localStorage.getItem('occurrences_school');
-      if (savedOccurrences) {
-        return JSON.parse(savedOccurrences);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const savedOccurrences = localStorage.getItem('occurrences_school');
+        if (savedOccurrences) {
+          return JSON.parse(savedOccurrences);
+        }
       }
       return seedOccurrences;
     } catch (error) {
@@ -38,13 +40,17 @@ const App: React.FC = () => {
   
   useEffect(() => {
     // Check session storage on initial load
-    const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    setIsAuthenticated(loggedIn);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+      setIsAuthenticated(loggedIn);
+    }
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem('occurrences_school', JSON.stringify(occurrences));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('occurrences_school', JSON.stringify(occurrences));
+      }
     } catch (error) {
       console.error("Failed to save occurrences to localStorage", error);
     }
@@ -64,7 +70,9 @@ const App: React.FC = () => {
   }, [removeToast]);
 
   const handleLoginSuccess = () => {
-    sessionStorage.setItem('isLoggedIn', 'true');
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.setItem('isLoggedIn', 'true');
+    }
     setIsAuthenticated(true);
   };
 
