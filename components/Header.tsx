@@ -1,4 +1,5 @@
 import React from 'react';
+import { LogoutIcon } from './icons/LogoutIcon';
 
 type ActiveTab = 'register' | 'dashboard' | 'settings';
 
@@ -6,6 +7,7 @@ interface HeaderProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   occurrenceCount: number;
+  onLogout: () => void;
 }
 
 interface TabButtonProps {
@@ -36,7 +38,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick, count }
   </button>
 );
 
-const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, occurrenceCount }) => {
+const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, occurrenceCount, onLogout }) => {
   return (
     <header className="bg-emerald-700 text-white shadow-lg sticky top-0 z-40">
       <div className="container mx-auto px-4 md:px-8">
@@ -49,23 +51,33 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, occurrenceCoun
               Plataforma Inteligente de Gestão
             </p>
           </div>
-          <div className="bg-emerald-800/50 p-1.5 rounded-lg flex items-center space-x-2">
-            <TabButton 
-              label="Registrar Ocorrência"
-              isActive={activeTab === 'register'}
-              onClick={() => setActiveTab('register')}
-            />
-             <TabButton 
-              label="Painel & Histórico"
-              isActive={activeTab === 'dashboard'}
-              onClick={() => setActiveTab('dashboard')}
-              count={occurrenceCount}
-            />
-             <TabButton 
-              label="Backup & Restauração"
-              isActive={activeTab === 'settings'}
-              onClick={() => setActiveTab('settings')}
-            />
+          <div className="flex items-center space-x-4">
+            <div className="bg-emerald-800/50 p-1.5 rounded-lg flex items-center space-x-2">
+              <TabButton 
+                label="Registrar Ocorrência"
+                isActive={activeTab === 'register'}
+                onClick={() => setActiveTab('register')}
+              />
+               <TabButton 
+                label="Painel & Histórico"
+                isActive={activeTab === 'dashboard'}
+                onClick={() => setActiveTab('dashboard')}
+                count={occurrenceCount}
+              />
+               <TabButton 
+                label="Backup & Restauração"
+                isActive={activeTab === 'settings'}
+                onClick={() => setActiveTab('settings')}
+              />
+            </div>
+            <button
+              onClick={onLogout}
+              className="p-2.5 rounded-lg text-emerald-100 bg-emerald-800/50 hover:bg-white/10 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+              aria-label="Sair da aplicação"
+              title="Sair"
+            >
+              <LogoutIcon className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>

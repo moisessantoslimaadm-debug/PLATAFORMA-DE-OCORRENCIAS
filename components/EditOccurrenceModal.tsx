@@ -17,6 +17,22 @@ interface EditOccurrenceModalProps {
   onSave: (occurrence: Occurrence) => void;
 }
 
+const formatPhoneNumber = (value: string) => {
+    if (!value) return '';
+    let digitsOnly = value.replace(/\D/g, '').slice(0, 11);
+    
+    if (digitsOnly.length <= 2) {
+        return `(${digitsOnly}`;
+    }
+    if (digitsOnly.length <= 6) {
+        return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2)}`;
+    }
+    if (digitsOnly.length <= 10) {
+        return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6)}`;
+    }
+    return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 7)}-${digitsOnly.slice(7, 11)}`;
+};
+
 const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occurrence, onClose, onSave }) => {
   const [formData, setFormData] = useState(occurrence);
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -59,6 +75,18 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section?: keyof typeof occurrence) => {
     const { name, value } = e.target;
+    
+    if (section === 'guardian' && name === 'phone') {
+        setFormData(prev => ({
+            ...prev,
+            guardian: {
+                ...prev.guardian,
+                phone: formatPhoneNumber(value),
+            },
+        }));
+        return;
+    }
+
     if (section) {
       setFormData(prev => ({
         ...prev,
@@ -141,7 +169,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextInput label="Nome Completo" id="guardian.fullName-edit" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName} />
                 <TextInput label="Parentesco" id="guardian.relationship-edit" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
-                <TextInput label="Contato Telefônico" id="guardian.phone-edit" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
+                <TextInput label="Contato Telefônico" id="guardian.phone-edit" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} maxLength={15} placeholder="(XX) XXXXX-XXXX" />
                 <TextInput label="Endereço Completo" id="guardian.address-edit" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2" required error={errors.guardian?.address}/>
             </div>
 

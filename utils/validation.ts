@@ -67,7 +67,7 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
   } else {
     const cleanedPhone = data.guardian.phone.trim().replace(/\D/g, '');
     if (cleanedPhone.length < 10 || cleanedPhone.length > 11) {
-        errors.guardian = { ...errors.guardian, phone: 'Telefone inválido. Forneça um número com DDD, ex: (75) 99999-8888.' };
+        errors.guardian = { ...errors.guardian, phone: 'Telefone inválido. O número deve ter 10 ou 11 dígitos com DDD.' };
     }
   }
 

@@ -12,11 +12,13 @@ import Header from './components/Header';
 import DashboardAndList from './components/DashboardAndList';
 import Settings from './components/Settings';
 import LoginScreen from './components/LoginScreen';
+import ThankYouPage from './components/ThankYouPage';
 
 type ActiveTab = 'register' | 'dashboard' | 'settings';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -75,6 +77,18 @@ const App: React.FC = () => {
     }
     setIsAuthenticated(true);
   };
+
+  const handleLogout = useCallback(() => {
+    setIsLoggingOut(true);
+
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.removeItem('isLoggedIn');
+      }
+      setIsAuthenticated(false);
+      setIsLoggingOut(false); // Reset for next login
+    }, 5000); // Show thank you page for 5 seconds
+  }, []);
 
   const addOccurrence = useCallback((occurrence: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => {
     const timestamp = new Date().toISOString();
@@ -220,6 +234,10 @@ const App: React.FC = () => {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
+  if (isLoggingOut) {
+    return <ThankYouPage />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Toast toasts={toasts} onClose={removeToast} />
@@ -227,6 +245,7 @@ const App: React.FC = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         occurrenceCount={occurrences.length} 
+        onLogout={handleLogout}
       />
       
       <main className="container mx-auto p-4 md:p-8">

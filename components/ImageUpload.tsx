@@ -9,12 +9,76 @@ interface ImageUploadProps {
   onChange: (base64Url?: string) => void;
 }
 
+/**
+ * Comprime e redimensiona uma imagem.
+ * @param file O arquivo de imagem a ser processado.
+ * @returns Uma Promise que resolve com a string base64 da imagem comprimida.
+ */
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      const imageUrl = event.target?.result;
+
+      if (typeof imageUrl !== 'string') {
+        return reject(new Error('Conteúdo do arquivo não pôde ser lido.'));
+      }
+      
+      img.src = imageUrl;
+      img.onload = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let { width, height } = img;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject(new Error('Não foi possível obter o contexto 2D do canvas.'));
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Converte para JPEG com 80% de qualidade para compressão.
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            resolve(compressedDataUrl);
+        } catch (err) {
+            reject(err);
+        }
+      };
+      img.onerror = () => {
+        reject(new Error('Arquivo de imagem corrompido ou inválido.'));
+      };
+    };
+    reader.onerror = () => {
+      reject(new Error('Falha ao ler o arquivo de imagem.'));
+    };
+  });
+};
+
+
 export const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -34,62 +98,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onChange }) 
       return;
     }
 
-    const reader = new FileReader();
-    reader.onerror = () => {
-        setError('Falha ao ler o arquivo de imagem.');
-        setIsLoading(false);
-    };
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = () => {
-        setError('Arquivo de imagem corrompido ou inválido.');
-        setIsLoading(false);
-      };
-      img.onload = () => {
-        try {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 800;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                throw new Error("Não foi possível obter o contexto 2D do canvas.");
-            };
-
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            onChange(compressedDataUrl);
-        } catch(err) {
-            console.error("Image processing error:", err);
-            setError("Ocorreu um erro ao processar a imagem.");
-        } finally {
-            setIsLoading(false);
-        }
-      };
-      if (typeof e.target?.result === 'string') {
-        img.src = e.target.result;
-      } else {
-        setError('Conteúdo do arquivo não pôde ser lido.');
-        setIsLoading(false);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedDataUrl = await compressImage(file);
+      onChange(compressedDataUrl);
+    } catch (err) {
+      console.error("Image processing error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Ocorreu um erro ao processar a imagem.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const triggerFileInput = (e?: React.MouseEvent) => {
