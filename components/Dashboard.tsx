@@ -1,23 +1,34 @@
 import React, { useMemo } from 'react';
 import { Occurrence, OccurrenceType } from '../types';
-import { OCCURRENCE_TYPE_COLORS } from '../constants';
+import { OCCURRENCE_TYPE_DATA } from '../constants';
+import { DocumentIcon } from './icons/DocumentIcon';
 
 interface DashboardProps {
   occurrences: Occurrence[];
 }
 
+const StatCard: React.FC<{type: OccurrenceType, count: number}> = ({ type, count }) => {
+    const typeData = OCCURRENCE_TYPE_DATA[type];
+    const IconComponent = typeData.icon || DocumentIcon;
+    return (
+         <div className="flex items-start p-4 bg-white rounded-lg shadow border border-gray-200">
+            <div className={`p-3 rounded-lg ${typeData.color.bg} ${typeData.color.text}`}>
+                <IconComponent className="h-6 w-6" />
+            </div>
+            <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 truncate">{type}</p>
+                <p className="text-2xl font-bold text-gray-900">{count}</p>
+            </div>
+        </div>
+    )
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ occurrences }) => {
   const typeCounts = useMemo(() => {
-    const counts: { [key in OccurrenceType]: number } = {
-      [OccurrenceType.PHYSICAL_AGGRESSION]: 0,
-      [OccurrenceType.VERBAL_AGGRESSION]: 0,
-      [OccurrenceType.BULLYING]: 0,
-      [OccurrenceType.PROPERTY_DAMAGE]: 0,
-      [OccurrenceType.ESCAPE]: 0,
-      [OccurrenceType.SOCIAL_RISK]: 0,
-      [OccurrenceType.PROHIBITED_SUBSTANCES]: 0,
-      [OccurrenceType.OTHER]: 0,
-    };
+    const counts: { [key in OccurrenceType]: number } = Object.values(OccurrenceType).reduce((acc, type) => {
+        acc[type] = 0;
+        return acc;
+    }, {} as { [key in OccurrenceType]: number });
     
     occurrences.forEach(occ => {
       occ.occurrenceTypes.forEach(type => {
@@ -33,31 +44,22 @@ const Dashboard: React.FC<DashboardProps> = ({ occurrences }) => {
   const totalOccurrences = occurrences.length;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Índice de Ocorrências</h3>
-        {totalOccurrences === 0 ? (
-           <div className="flex items-center justify-center h-full text-gray-500 py-8">Nenhuma ocorrência registrada.</div>
-        ) : (
-            <div className="space-y-3">
-            {typeCounts.map(([type, count]) => (
-                <div key={type}>
-                    <div className="flex justify-between text-sm mb-1 items-center">
-                        <span className="text-gray-600 truncate pr-2">{type}</span>
-                        <div className="flex items-center gap-2">
-                             <div className="w-20 h-4 bg-gray-200 rounded-md">
-                                {count > 0 &&
-                                    <div
-                                        className="h-4 rounded-md"
-                                        style={{ width: `100%`, backgroundColor: OCCURRENCE_TYPE_COLORS[type] }}
-                                    ></div>
-                                }
-                            </div>
-                            <span className="font-semibold text-gray-800 w-4 text-right">{count}</span>
-                        </div>
-                    </div>
-                </div>
-            ))}
+    <div className="mb-8">
+        <div className="mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Painel de Controle</h2>
+            <p className="text-gray-500">Resumo estatístico das ocorrências registradas.</p>
         </div>
+
+        {totalOccurrences === 0 ? (
+           <div className="text-center py-10 bg-white rounded-lg shadow-md border border-gray-200">
+                <p className="text-gray-500">Nenhuma ocorrência registrada para exibir estatísticas.</p>
+            </div>
+        ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {typeCounts.map(([type, count]) => (
+                    <StatCard key={type} type={type} count={count} />
+                ))}
+            </div>
         )}
     </div>
   );

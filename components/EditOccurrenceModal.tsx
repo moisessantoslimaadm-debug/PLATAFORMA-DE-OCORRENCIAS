@@ -44,6 +44,8 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
                     age: String(Math.max(0, age))
                 }
             }));
+        } else {
+            setFormData(prev => ({ ...prev, student: { ...prev.student, age: '' } }));
         }
     }
   }, [formData.student.birthDate]);
@@ -114,7 +116,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
               </div>
               <TextInput label="Nº de Matrícula" id="student.enrollmentId-edit" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
               <TextInput label="Data de Nascimento" id="student.birthDate-edit" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
-              <TextInput label="Idade" id="student.age-edit" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="!bg-gray-600" />
+              <TextInput label="Idade" id="student.age-edit" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly placeholder="Automático" />
               <TextInput label="Ano/Série" id="student.grade-edit" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
               <TextInput label="Turno" id="student.shift-edit" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
             </div>
@@ -124,7 +126,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
                 <TextInput label="Nome Completo" id="guardian.fullName-edit" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName} />
                 <TextInput label="Parentesco" id="guardian.relationship-edit" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
                 <TextInput label="Contato Telefônico" id="guardian.phone-edit" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
-                <TextInput label="Endereço Completo" id="guardian.address-edit" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2"/>
+                <TextInput label="Endereço Completo" id="guardian.address-edit" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2" required error={errors.guardian?.address}/>
             </div>
 
             <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">3. Caracterização da Ocorrência</h3>
@@ -168,7 +170,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             <button type="button" onClick={onClose} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
               Cancelar
             </button>
-            <Button type="submit">Salvar Alterações</Button>
+            <Button type="submit" className="w-auto">Salvar Alterações</Button>
           </div>
         </form>
       </div>

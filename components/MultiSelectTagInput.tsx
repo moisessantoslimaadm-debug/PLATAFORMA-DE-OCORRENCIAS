@@ -53,8 +53,7 @@ export const MultiSelectTagInput: React.FC<MultiSelectTagInputProps> = ({
   }, []);
 
   const errorClass = "border-red-500 ring-1 ring-red-500";
-  const defaultClass = "border-gray-600 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-700 focus-within:ring-green-500 focus-within:border-green-500";
-
+  const defaultClass = "border-gray-300 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500";
 
   return (
     <div ref={containerRef}>
@@ -64,13 +63,13 @@ export const MultiSelectTagInput: React.FC<MultiSelectTagInputProps> = ({
       <div className="relative">
         <div
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex flex-wrap items-center w-full gap-2 p-2 text-left bg-gray-700 border rounded-md shadow-sm min-h-[42px] cursor-pointer ${error ? errorClass : defaultClass}`}
+          className={`flex flex-wrap items-center w-full gap-2 p-2 text-left bg-white border rounded-md shadow-sm min-h-[42px] cursor-pointer ${error ? errorClass : defaultClass}`}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
         >
           {selectedOptions.length === 0 && <span className="text-gray-400 text-sm px-1">{placeholder}</span>}
           {selectedOptions.map(option => (
-            <span key={option} className="flex items-center gap-1 bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded-full">
+            <span key={option} className="flex items-center gap-1 bg-emerald-100 text-emerald-800 text-sm font-medium px-2 py-1 rounded-full">
               {option}
               <button
                 type="button"
@@ -78,10 +77,10 @@ export const MultiSelectTagInput: React.FC<MultiSelectTagInputProps> = ({
                   e.stopPropagation();
                   removeOption(option);
                 }}
-                className="rounded-full hover:bg-green-300"
+                className="rounded-full hover:bg-emerald-200"
                 aria-label={`Remover ${option}`}
               >
-                <CloseIcon className="h-4 w-4 text-green-800" />
+                <CloseIcon className="h-4 w-4 text-emerald-700" />
               </button>
             </span>
           ))}
@@ -96,13 +95,13 @@ export const MultiSelectTagInput: React.FC<MultiSelectTagInputProps> = ({
               <li
                 key={option}
                 onClick={() => onOptionClicked(option)}
-                className="px-4 py-2 text-sm text-gray-900 cursor-pointer hover:bg-green-50 flex items-center justify-between"
+                className="px-4 py-2 text-sm text-gray-900 cursor-pointer hover:bg-emerald-50 flex items-center justify-between"
                 role="option"
                 aria-selected={selectedOptions.includes(option)}
               >
                 {option}
                 {selectedOptions.includes(option) && 
-                    <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                 }

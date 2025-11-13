@@ -1,8 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Occurrence, OccurrenceStatus, Toast as ToastType, AuditEntry } from './types';
 import OccurrenceForm from './components/OccurrenceForm';
-import OccurrenceList from './components/OccurrenceList';
-import Dashboard from './components/Dashboard';
 import EditOccurrenceModal from './components/EditOccurrenceModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import Toast from './components/Toast';
@@ -10,6 +8,11 @@ import { generateExcelReport, generatePdfReport, generateSingleOccurrencePdf } f
 import { seedOccurrences } from './utils/seedData';
 import { ReportOptions } from './components/ReportModal';
 import { generateChangeDetails } from './utils/auditHelper';
+import Header from './components/Header';
+import DashboardAndList from './components/DashboardAndList';
+import Settings from './components/Settings';
+
+type ActiveTab = 'register' | 'dashboard' | 'settings';
 
 const App: React.FC = () => {
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
@@ -18,18 +21,18 @@ const App: React.FC = () => {
       if (savedOccurrences) {
         return JSON.parse(savedOccurrences);
       }
-      return seedOccurrences; // Load seed data if localStorage is empty
+      return seedOccurrences;
     } catch (error) {
       console.error("Failed to load occurrences from localStorage", error);
-      return seedOccurrences; // Fallback to seed data on error
+      return seedOccurrences;
     }
   });
   
-  const [searchTerm, setSearchTerm] = useState('');
   const [editingOccurrence, setEditingOccurrence] = useState<Occurrence | null>(null);
   const [deletingOccurrenceId, setDeletingOccurrenceId] = useState<string | null>(null);
   const [dataToRestore, setDataToRestore] = useState<Occurrence[] | null>(null);
   const [toasts, setToasts] = useState<ToastType[]>([]);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('register');
 
   useEffect(() => {
     try {
@@ -55,7 +58,7 @@ const App: React.FC = () => {
   const addOccurrence = useCallback((occurrence: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => {
     const timestamp = new Date().toISOString();
     const newOccurrence: Occurrence = {
-      ...(occurrence as Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>), // Cast to satisfy TS
+      ...(occurrence as Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>),
       id: `OCC-${Date.now()}`,
       status: OccurrenceStatus.OPEN,
       createdAt: timestamp,
@@ -70,6 +73,7 @@ const App: React.FC = () => {
     };
     setOccurrences(prev => [newOccurrence, ...prev]);
     addToast('Ocorrência registrada com sucesso!');
+    setActiveTab('dashboard'); // Switch to dashboard after registering
   }, [addToast]);
 
   const updateOccurrence = useCallback((updatedOccurrence: Occurrence) => {
@@ -107,7 +111,7 @@ const App: React.FC = () => {
     setOccurrences(prev =>
       prev.map(occ => {
         if (occ.id === id) {
-          if (occ.status === status) return occ; // No change
+          if (occ.status === status) return occ;
 
           const oldStatus = occ.status;
           const timestamp = new Date().toISOString();
@@ -138,40 +142,7 @@ const App: React.FC = () => {
       addToast('Ocorrência excluída com sucesso!');
     }
   }, [deletingOccurrenceId, addToast]);
-
-  const filteredOccurrences = useMemo(() => {
-    return occurrences.filter(occ => 
-      occ.student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      occ.detailedDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      occ.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [occurrences, searchTerm]);
   
-  const handleGenerateCustomReport = useCallback((data: Occurrence[], options: ReportOptions) => {
-    const { format, columns, groupBy } = options;
-    if (columns.length === 0) {
-      addToast('Selecione ao menos uma coluna para gerar o relatório.', 'error');
-      return;
-    }
-
-    addToast(`Gerando relatório em ${format.toUpperCase()}...`);
-    if (format === 'pdf') {
-      generatePdfReport(data, columns, groupBy);
-    } else {
-      generateExcelReport(data, columns, groupBy);
-    }
-  }, [addToast]);
-
-  const handleGenerateSinglePdf = useCallback((data: Occurrence) => {
-    const validationError = generateSingleOccurrencePdf(data);
-    if (validationError) {
-      addToast(validationError, 'error');
-    } else {
-      addToast(`Ficha de ${data.student.fullName} gerada com sucesso!`);
-    }
-  }, [addToast]);
-
-  // Backup and Restore Logic
   const handleBackup = useCallback(() => {
     try {
       const dataStr = JSON.stringify(occurrences, null, 2);
@@ -198,12 +169,8 @@ const App: React.FC = () => {
     reader.onload = (e) => {
       try {
         const text = e.target?.result;
-        if (typeof text !== 'string') {
-          throw new Error("File content is not a string.");
-        }
+        if (typeof text !== 'string') throw new Error("File content is not a string.");
         const data = JSON.parse(text);
-        
-        // Simple validation
         if (Array.isArray(data) && (data.length === 0 || (data[0].id && data[0].student))) {
           setDataToRestore(data);
         } else {
@@ -213,7 +180,6 @@ const App: React.FC = () => {
         console.error("Restore failed", error);
         addToast('Arquivo de backup inválido ou corrompido.', 'error');
       } finally {
-        // Reset file input to allow selecting the same file again
         event.target.value = '';
       }
     };
@@ -230,38 +196,28 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans">
       <Toast toasts={toasts} onClose={removeToast} />
-      <main className="container mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        <div className="lg:col-span-8">
-          <OccurrenceForm 
-            onSubmit={addOccurrence} 
-          />
-        </div>
-
-        <div className="lg:col-span-4 flex flex-col gap-8">
-          <Dashboard occurrences={occurrences} />
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                Histórico
-                <span className="ml-2 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                    {filteredOccurrences.length}
-                </span>
-            </h3>
-            <OccurrenceList
-              occurrences={filteredOccurrences}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onUpdateStatus={updateOccurrenceStatus}
-              onDeleteRequest={setDeletingOccurrenceId}
-              onEditRequest={setEditingOccurrence}
-              onGenerateReport={handleGenerateCustomReport}
-              onGenerateSinglePdf={handleGenerateSinglePdf}
-              onBackup={handleBackup}
-              onRestoreRequest={handleFileSelect}
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+      <main className="container mx-auto p-4 md:p-8">
+        <div key={activeTab}>
+          {activeTab === 'register' && <OccurrenceForm onSubmit={addOccurrence} />}
+          {activeTab === 'dashboard' && 
+            <DashboardAndList 
+              occurrences={occurrences}
+              updateOccurrenceStatus={updateOccurrenceStatus}
+              setDeletingOccurrenceId={setDeletingOccurrenceId}
+              setEditingOccurrence={setEditingOccurrence}
+              addToast={addToast}
             />
-          </div>
+          }
+          {activeTab === 'settings' && 
+            <Settings 
+              onBackup={handleBackup} 
+              onRestoreRequest={handleFileSelect} 
+            />
+          }
         </div>
       </main>
 
@@ -288,7 +244,7 @@ const App: React.FC = () => {
          <ConfirmationModal
           isOpen={!!dataToRestore}
           title="Confirmar Restauração"
-          message="Você tem certeza que deseja restaurar este backup? Todos os dados atuais serão substituídos. Esta ação não pode ser desfeita."
+          message="Você tem certeza que deseja restaurar este backup? Todos os dados atuais serão substituídos."
           onConfirm={confirmRestore}
           onClose={() => setDataToRestore(null)}
         />

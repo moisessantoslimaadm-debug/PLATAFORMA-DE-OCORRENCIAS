@@ -13,6 +13,7 @@ export interface ValidationErrors {
   guardian?: {
     fullName?: string;
     phone?: string;
+    address?: string;
   };
   occurrenceDate?: string;
   occurrenceTime?: string;
@@ -62,8 +63,19 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
 
   if (!data.guardian.phone?.trim()) {
     errors.guardian = { ...errors.guardian, phone: 'O contato do responsável é obrigatório.' };
+  } else {
+    const cleanedPhone = data.guardian.phone.trim().replace(/\D/g, '');
+    if (cleanedPhone.length < 10 || cleanedPhone.length > 11) {
+        errors.guardian = { ...errors.guardian, phone: 'Telefone inválido. Deve conter 10 ou 11 dígitos (com DDD).' };
+    }
   }
 
+  if (!data.guardian.address?.trim()) {
+    errors.guardian = { ...errors.guardian, address: 'O endereço do responsável é obrigatório.' };
+  } else if (data.guardian.address.trim().length < 10) {
+    errors.guardian = { ...errors.guardian, address: 'O endereço deve ter pelo menos 10 caracteres.' };
+  }
+  
 
   // Occurrence Validation
   if (!data.occurrenceDate) {

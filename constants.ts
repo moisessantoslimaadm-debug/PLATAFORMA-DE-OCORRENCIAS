@@ -1,4 +1,7 @@
-import { OccurrenceType } from './types';
+// FIX: Import React to use React types like React.FC and React.SVGProps.
+import React from 'react';
+import { OccurrenceStatus, OccurrenceType } from './types';
+import { PhysicalAggressionIcon, VerbalAggressionIcon, BullyingIcon, PropertyDamageIcon, EscapeIcon, SocialRiskIcon, ProhibitedSubstancesIcon, OtherIcon } from './components/icons/OccurrenceTypeIcons';
 
 export const SCHOOL_UNITS = [
     "Escola Municipal Dr. Abdias de Menezes",
@@ -11,17 +14,23 @@ export const SCHOOL_UNITS = [
 
 export const OCCURRENCE_TYPES = Object.values(OccurrenceType);
 
-export const OCCURRENCE_TYPE_COLORS: { [key in OccurrenceType]: string } = {
-  [OccurrenceType.PHYSICAL_AGGRESSION]: '#22c55e',
-  [OccurrenceType.VERBAL_AGGRESSION]: '#3b82f6',
-  [OccurrenceType.BULLYING]: '#6366f1',
-  [OccurrenceType.PROPERTY_DAMAGE]: '#8b5cf6',
-  [OccurrenceType.ESCAPE]: '#ec4899',
-  [OccurrenceType.SOCIAL_RISK]: '#ef4444',
-  [OccurrenceType.PROHIBITED_SUBSTANCES]: '#f97316',
-  [OccurrenceType.OTHER]: '#f59e0b',
+export const OCCURRENCE_TYPE_DATA: { [key in OccurrenceType]: { icon: React.FC<React.SVGProps<SVGSVGElement>>, color: { bg: string, text: string } } } = {
+  [OccurrenceType.PHYSICAL_AGGRESSION]: { icon: PhysicalAggressionIcon, color: { bg: 'bg-red-100', text: 'text-red-600' } },
+  [OccurrenceType.VERBAL_AGGRESSION]: { icon: VerbalAggressionIcon, color: { bg: 'bg-orange-100', text: 'text-orange-600' } },
+  [OccurrenceType.BULLYING]: { icon: BullyingIcon, color: { bg: 'bg-amber-100', text: 'text-amber-600' } },
+  [OccurrenceType.PROPERTY_DAMAGE]: { icon: PropertyDamageIcon, color: { bg: 'bg-yellow-100', text: 'text-yellow-600' } },
+  [OccurrenceType.ESCAPE]: { icon: EscapeIcon, color: { bg: 'bg-lime-100', text: 'text-lime-600' } },
+  [OccurrenceType.SOCIAL_RISK]: { icon: SocialRiskIcon, color: { bg: 'bg-sky-100', text: 'text-sky-600' } },
+  [OccurrenceType.PROHIBITED_SUBSTANCES]: { icon: ProhibitedSubstancesIcon, color: { bg: 'bg-indigo-100', text: 'text-indigo-600' } },
+  [OccurrenceType.OTHER]: { icon: OtherIcon, color: { bg: 'bg-slate-100', text: 'text-slate-600' } },
 };
 
+export const OCCURRENCE_STATUS_STYLES: { [key in OccurrenceStatus]: { bg: string, text: string } } = {
+  [OccurrenceStatus.OPEN]: { bg: 'bg-blue-100', text: 'text-blue-800' },
+  [OccurrenceStatus.IN_PROGRESS]: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+  [OccurrenceStatus.RESOLVED]: { bg: 'bg-green-100', text: 'text-green-800' },
+  [OccurrenceStatus.CLOSED]: { bg: 'bg-gray-100', text: 'text-gray-800' },
+};
 
 export const REPORT_COLUMNS = [
   { key: 'id', label: 'ID Ocorrência' },
