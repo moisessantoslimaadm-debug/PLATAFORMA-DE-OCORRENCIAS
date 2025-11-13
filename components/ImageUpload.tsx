@@ -13,18 +13,51 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onChange }) 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Check for file size (e.g., 2MB limit)
-      if (file.size > 2 * 1024 * 1024) {
-          alert('A imagem é muito grande. O tamanho máximo é 2MB.');
-          return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onChange(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Check for file size (e.g., 2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('A imagem é muito grande. O tamanho máximo é 2MB.');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG with 80% quality
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        onChange(compressedDataUrl);
+      };
+      if (typeof e.target?.result === 'string') {
+        img.src = e.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const triggerFileInput = (e?: React.MouseEvent) => {

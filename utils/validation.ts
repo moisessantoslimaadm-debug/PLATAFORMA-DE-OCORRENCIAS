@@ -81,12 +81,53 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
   // Occurrence Validation
   if (!data.occurrenceDate) {
     errors.occurrenceDate = 'A data da ocorrência é obrigatória.';
-  } else if (new Date(data.occurrenceDate) > new Date()) {
-    errors.occurrenceDate = 'A data da ocorrência não pode ser no futuro.';
+  } else {
+    const [year, month, day] = data.occurrenceDate.split('-').map(Number);
+    // Month is 0-indexed in JS Date
+    const occurrenceDateObj = new Date(year, month - 1, day);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today to midnight for date comparison
+
+    if (occurrenceDateObj > today) {
+      errors.occurrenceDate = 'A data da ocorrência não pode ser no futuro.';
+    }
+
+    if (data.student.birthDate) {
+      const [sYear, sMonth, sDay] = data.student.birthDate.split('-').map(Number);
+      const birthDateObj = new Date(sYear, sMonth - 1, sDay);
+      if (occurrenceDateObj < birthDateObj) {
+        errors.occurrenceDate = 'A ocorrência não pode ser anterior ao nascimento do aluno.';
+      }
+    }
   }
   
   if (!data.occurrenceTime) {
     errors.occurrenceTime = 'O horário aproximado é obrigatório.';
+  } else {
+    const [hour, minute] = data.occurrenceTime.split(':').map(Number);
+
+    // Check for logical school hours (7am to 10:59pm)
+    if (hour < 7 || hour >= 23) {
+      errors.occurrenceTime = 'O horário deve ser entre 07:00 e 22:59.';
+    } else if (!errors.occurrenceDate) {
+      // Check if time is in the future for today's date, only if date is valid so far
+      const [year, month, day] = data.occurrenceDate.split('-').map(Number);
+      const occurrenceDateObj = new Date(year, month - 1, day);
+      const today = new Date();
+      
+      // Compare dates without time
+      if (occurrenceDateObj.getFullYear() === today.getFullYear() &&
+          occurrenceDateObj.getMonth() === today.getMonth() &&
+          occurrenceDateObj.getDate() === today.getDate())
+      {
+          const currentHour = today.getHours();
+          const currentMinute = today.getMinutes();
+          if (hour > currentHour || (hour === currentHour && minute > currentMinute)) {
+              errors.occurrenceTime = 'O horário não pode ser futuro para o dia de hoje.';
+          }
+      }
+    }
   }
 
   if (!data.location?.trim()) {
