@@ -11,10 +11,12 @@ import { generateChangeDetails } from './utils/auditHelper';
 import Header from './components/Header';
 import DashboardAndList from './components/DashboardAndList';
 import Settings from './components/Settings';
+import LoginScreen from './components/LoginScreen';
 
 type ActiveTab = 'register' | 'dashboard' | 'settings';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
     try {
       const savedOccurrences = localStorage.getItem('occurrences_school');
@@ -33,6 +35,12 @@ const App: React.FC = () => {
   const [dataToRestore, setDataToRestore] = useState<Occurrence[] | null>(null);
   const [toasts, setToasts] = useState<ToastType[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('register');
+  
+  useEffect(() => {
+    // Check session storage on initial load
+    const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    setIsAuthenticated(loggedIn);
+  }, []);
 
   useEffect(() => {
     try {
@@ -54,6 +62,11 @@ const App: React.FC = () => {
       removeToast(id);
     }, 5000);
   }, [removeToast]);
+
+  const handleLoginSuccess = () => {
+    sessionStorage.setItem('isLoggedIn', 'true');
+    setIsAuthenticated(true);
+  };
 
   const addOccurrence = useCallback((occurrence: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => {
     const timestamp = new Date().toISOString();
@@ -194,6 +207,10 @@ const App: React.FC = () => {
     }
   }, [dataToRestore, addToast]);
 
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">

@@ -11,14 +11,12 @@ const StatCard: React.FC<{type: OccurrenceType, count: number}> = ({ type, count
     const typeData = OCCURRENCE_TYPE_DATA[type];
     const IconComponent = typeData.icon || DocumentIcon;
     return (
-         <div className="flex items-start p-4 bg-white rounded-lg shadow border border-gray-200">
-            <div className={`p-3 rounded-lg ${typeData.color.bg} ${typeData.color.text}`}>
-                <IconComponent className="h-6 w-6" />
+         <div className="p-4 bg-white rounded-lg shadow border border-gray-200">
+            <div className="flex items-center text-sm font-medium text-gray-500 truncate">
+                <IconComponent className={`h-5 w-5 mr-2 shrink-0 ${typeData.color.text}`} />
+                <span className="truncate">{type}</span>
             </div>
-            <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 truncate">{type}</p>
-                <p className="text-2xl font-bold text-gray-900">{count}</p>
-            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{count}</p>
         </div>
     )
 }

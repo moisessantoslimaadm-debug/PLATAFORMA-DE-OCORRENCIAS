@@ -8,6 +8,7 @@ import { CloseIcon } from './icons/CloseIcon';
 import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
 import { validateOccurrence, ValidationErrors } from '../utils/validation';
 import { MultiSelectTagInput } from './MultiSelectTagInput';
+import { ImageUpload } from './ImageUpload';
 
 interface EditOccurrenceModalProps {
   isOpen: boolean;
@@ -110,15 +111,30 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             </div>
           
             <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">1. Identificação do Aluno</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <TextInput label="Nome Completo" id="student.fullName-edit" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+               <div className="flex flex-col items-center justify-center md:col-span-1">
+                  <ImageUpload
+                      imageUrl={formData.student.photoUrl}
+                      onChange={(base64Url) =>
+                          setFormData(prev => ({
+                              ...prev,
+                              student: { ...prev.student, photoUrl: base64Url }
+                          }))
+                      }
+                  />
               </div>
-              <TextInput label="Nº de Matrícula" id="student.enrollmentId-edit" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
-              <TextInput label="Data de Nascimento" id="student.birthDate-edit" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
-              <TextInput label="Idade" id="student.age-edit" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly placeholder="Automático" />
-              <TextInput label="Ano/Série" id="student.grade-edit" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
-              <TextInput label="Turno" id="student.shift-edit" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
+              <div className="md:col-span-2 space-y-4">
+                  <TextInput label="Nome Completo" id="student.fullName-edit" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
+                  <div className="grid grid-cols-2 gap-4">
+                      <TextInput label="Data de Nascimento" id="student.birthDate-edit" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
+                      <TextInput label="Idade" id="student.age-edit" name="age" type="number" value={formData.student.age} readOnly placeholder="Automático" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                      <TextInput label="Nº de Matrícula" id="student.enrollmentId-edit" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
+                      <TextInput label="Ano/Série" id="student.grade-edit" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
+                  </div>
+                  <TextInput label="Turno" id="student.shift-edit" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
+              </div>
             </div>
 
             <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">2. Responsável Legal</h3>

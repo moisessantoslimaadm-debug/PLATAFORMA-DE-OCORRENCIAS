@@ -6,7 +6,7 @@ import { PrintIcon } from './icons/PrintIcon';
 import { ClockIcon } from './icons/ClockIcon';
 import { UserCircleIcon } from './icons/UserCircleIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { OCCURRENCE_STATUS_STYLES } from '../constants';
+import { OCCURRENCE_STATUS_STYLES, OCCURRENCE_TYPE_DATA } from '../constants';
 
 interface OccurrenceItemProps {
   occurrence: Occurrence;
@@ -27,7 +27,6 @@ const OccurrenceItem: React.FC<OccurrenceItemProps> = ({ occurrence, onUpdateSta
     });
   }
 
-  const occurrenceTypesText = occurrence.occurrenceTypes.join(', ');
   const statusStyle = OCCURRENCE_STATUS_STYLES[occurrence.status];
 
   return (
@@ -38,14 +37,28 @@ const OccurrenceItem: React.FC<OccurrenceItemProps> = ({ occurrence, onUpdateSta
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex-shrink-0 text-gray-400">
-             <UserCircleIcon className="h-10 w-10" />
+          <div className="flex-shrink-0">
+             {occurrence.student.photoUrl ? (
+                <img src={occurrence.student.photoUrl} alt={occurrence.student.fullName} className="h-10 w-10 rounded-full object-cover bg-gray-200" />
+              ) : (
+                <UserCircleIcon className="h-10 w-10 text-gray-400" />
+              )}
           </div>
           <div className="flex-1 overflow-hidden">
             <h4 className="font-bold text-gray-800 truncate">{occurrence.student.fullName}</h4>
-            <p className="text-xs text-gray-500 truncate" title={occurrenceTypesText}>
-              {occurrenceTypesText}
-            </p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1" title={occurrence.occurrenceTypes.join(', ')}>
+                {occurrence.occurrenceTypes.map(type => {
+                    const typeData = OCCURRENCE_TYPE_DATA[type];
+                    if (!typeData) return null;
+                    const Icon = typeData.icon;
+                    return (
+                        <span key={type} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${typeData.color.bg} ${typeData.color.text}`}>
+                            <Icon className="h-3.5 w-3.5" />
+                            {type}
+                        </span>
+                    );
+                })}
+            </div>
           </div>
         </div>
          <div className="flex items-center gap-3 ml-4">
