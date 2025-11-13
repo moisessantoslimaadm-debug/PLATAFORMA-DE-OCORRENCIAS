@@ -5,18 +5,20 @@ type ActiveTab = 'register' | 'dashboard' | 'settings';
 interface HeaderProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  occurrenceCount: number;
 }
 
 interface TabButtonProps {
   label: string;
   isActive: boolean;
   onClick: () => void;
+  count?: number;
 }
 
-const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => (
+const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick, count }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 text-sm md:text-base font-semibold rounded-md transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 ${
+    className={`relative px-4 py-2 text-sm md:text-base font-semibold rounded-md transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 ${
       isActive
         ? 'bg-white/20 text-white'
         : 'text-emerald-100 hover:bg-white/10 hover:text-white'
@@ -24,10 +26,17 @@ const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => (
     aria-current={isActive ? 'page' : undefined}
   >
     {label}
+    {count !== undefined && count > 0 && (
+      <span className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2 ring-emerald-700 ${
+        isActive ? 'bg-white text-emerald-700' : 'bg-emerald-500 text-white'
+      }`}>
+        {count}
+      </span>
+    )}
   </button>
 );
 
-const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
+const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, occurrenceCount }) => {
   return (
     <header className="bg-emerald-700 text-white shadow-lg sticky top-0 z-40">
       <div className="container mx-auto px-4 md:px-8">
@@ -50,6 +59,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               label="Painel & Histórico"
               isActive={activeTab === 'dashboard'}
               onClick={() => setActiveTab('dashboard')}
+              count={occurrenceCount}
             />
              <TabButton 
               label="Backup & Restauração"

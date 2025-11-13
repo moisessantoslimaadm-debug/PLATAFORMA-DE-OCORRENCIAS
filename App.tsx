@@ -215,7 +215,11 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Toast toasts={toasts} onClose={removeToast} />
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Header 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        occurrenceCount={occurrences.length} 
+      />
       
       <main className="container mx-auto p-4 md:p-8">
         <div key={activeTab}>
