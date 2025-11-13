@@ -7,7 +7,7 @@ interface TextAreaInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
 }
 
 export const TextAreaInput: React.FC<TextAreaInputProps> = ({ label, id, error, className, ...props }) => {
-  const errorClass = "border-red-500 focus:border-red-500 focus:ring-red-500";
+  const errorClass = "border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500";
   const defaultClass = "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500";
 
   return (

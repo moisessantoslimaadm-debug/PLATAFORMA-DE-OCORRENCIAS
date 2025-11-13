@@ -52,7 +52,7 @@ export const MultiSelectTagInput: React.FC<MultiSelectTagInputProps> = ({
     };
   }, []);
 
-  const errorClass = "border-red-500 ring-1 ring-red-500";
+  const errorClass = "border-red-500 bg-red-50 ring-1 ring-red-500";
   const defaultClass = "border-gray-300 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500";
 
   return (

@@ -99,6 +99,15 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
+
+  const handleClearStep1 = () => {
+    setFormData(prev => ({
+      ...prev,
+      schoolUnit: initialFormData.schoolUnit,
+      student: initialFormData.student,
+    }));
+    setErrors({});
+  };
   
   const handleNext = () => {
     const stepErrors = validateStep(formData, currentStep);
@@ -165,7 +174,18 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
             <div key={currentStep} className="animate-fade-in min-h-[500px]">
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">Cabeçalho e Identificação do Aluno</h2>
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h2 className="text-xl font-semibold text-gray-700">Cabeçalho e Identificação do Aluno</h2>
+                    <button
+                      type="button"
+                      onClick={handleClearStep1}
+                      className="text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md px-2 py-1 transition-colors font-medium"
+                      title="Limpar campos do cabeçalho e do aluno"
+                    >
+                      Limpar Campos
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div className="md:col-span-6">
                       <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit} required>

@@ -7,7 +7,7 @@ interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const TextInput: React.FC<TextInputProps> = ({ label, id, error, className, ...props }) => {
-  const errorClass = "border-red-500 focus:border-red-500 focus:ring-red-500";
+  const errorClass = "border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500";
   const defaultClass = "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500";
   
   const readOnlyClass = props.readOnly ? "bg-slate-100 text-gray-600 cursor-not-allowed" : "bg-white";
