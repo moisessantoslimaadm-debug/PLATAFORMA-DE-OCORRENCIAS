@@ -6,6 +6,7 @@ import { TextInput } from './TextInput';
 import { Button } from './Button';
 import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
 import { CheckboxInput } from './CheckboxInput';
+import { validateOccurrence, ValidationErrors } from '../utils/validation';
 
 interface OccurrenceFormProps {
   onSubmit: (data: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => void;
@@ -45,6 +46,7 @@ const initialFormData = {
 
 const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   
   useEffect(() => {
     if (formData.student.birthDate) {
@@ -95,6 +97,12 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validateOccurrence(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     onSubmit(formData);
     setFormData(initialFormData);
   };
@@ -119,8 +127,8 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
         <fieldset className="border border-gray-300 p-4 rounded-md">
           <legend className="px-2 font-semibold text-lime-700">1. Identificação do Aluno Envolvido</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required />
-            <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} />
+            <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
+            <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} error={errors.student?.birthDate} />
             <TextInput label="Idade" id="student.age" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="bg-gray-100" />
             <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} />
             <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} />
@@ -141,8 +149,8 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
         <fieldset className="border border-gray-300 p-4 rounded-md">
           <legend className="px-2 font-semibold text-lime-700">3. Caracterização da Ocorrência</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required />
-              <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} />
+              <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
+              <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} error={errors.occurrenceTime} />
               <TextInput label="Local onde ocorreu" id="location" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" />
             </div>
             <div className="mt-4">
@@ -159,6 +167,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
                   />
                 ))}
               </div>
+              {errors.occurrenceTypes && <p className="mt-1 text-xs text-red-600">{errors.occurrenceTypes}</p>}
                {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
                 <TextInput
                   label="Especifique 'Outros'"
@@ -167,6 +176,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
                   value={formData.otherOccurrenceType}
                   onChange={handleChange}
                   className="mt-2"
+                  error={errors.otherOccurrenceType}
                 />
               )}
             </div>
@@ -174,7 +184,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
 
         <fieldset className="border border-gray-300 p-4 rounded-md">
             <legend className="px-2 font-semibold text-lime-700">4. Descrição Detalhada do Fato</legend>
-             <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica dos acontecimentos." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required />
+             <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica dos acontecimentos." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required error={errors.detailedDescription} />
         </fieldset>
 
          <fieldset className="border border-gray-300 p-4 rounded-md">

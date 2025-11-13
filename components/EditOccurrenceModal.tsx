@@ -7,6 +7,7 @@ import { Button } from './Button';
 import { CloseIcon } from './icons/CloseIcon';
 import { CheckboxInput } from './CheckboxInput';
 import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
+import { validateOccurrence, ValidationErrors } from '../utils/validation';
 
 interface EditOccurrenceModalProps {
   isOpen: boolean;
@@ -17,9 +18,11 @@ interface EditOccurrenceModalProps {
 
 const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occurrence, onClose, onSave }) => {
   const [formData, setFormData] = useState(occurrence);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     setFormData(occurrence);
+    setErrors({}); // Reset errors when a new occurrence is opened
   }, [occurrence]);
 
   useEffect(() => {
@@ -71,6 +74,12 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validateOccurrence(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     onSave(formData);
   };
 
@@ -102,9 +111,9 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
           <fieldset className="border border-gray-300 p-4 rounded-md">
             <legend className="px-2 font-semibold text-lime-700">1. Identificação do Aluno</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required className="md:col-span-2" />
+              <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required className="md:col-span-2" error={errors.student?.fullName} />
               <TextInput label="Nº de Matrícula" id="student.enrollmentId" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
-              <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} />
+              <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} error={errors.student?.birthDate} />
               <TextInput label="Idade" id="student.age" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="bg-gray-100" />
               <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} />
               <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} />
@@ -124,8 +133,8 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
           <fieldset className="border border-gray-300 p-4 rounded-md">
             <legend className="px-2 font-semibold text-lime-700">3. Caracterização da Ocorrência</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required />
-                <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} />
+                <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
+                <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} error={errors.occurrenceTime} />
                 <TextInput label="Local onde ocorreu" id="location" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" />
             </div>
             <div className="mt-4">
@@ -135,15 +144,16 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
                     <CheckboxInput key={type} id={`edit-type-${type}`} label={type} value={type} checked={formData.occurrenceTypes.includes(type)} onChange={handleCheckboxChange} />
                     ))}
                 </div>
+                 {errors.occurrenceTypes && <p className="mt-1 text-xs text-red-600">{errors.occurrenceTypes}</p>}
                 {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
-                    <TextInput label="Especifique 'Outros'" id="otherOccurrenceType" name="otherOccurrenceType" value={formData.otherOccurrenceType} onChange={handleChange} className="mt-2" />
+                    <TextInput label="Especifique 'Outros'" id="otherOccurrenceType" name="otherOccurrenceType" value={formData.otherOccurrenceType} onChange={handleChange} className="mt-2" error={errors.otherOccurrenceType} />
                 )}
             </div>
           </fieldset>
 
            <fieldset className="border border-gray-300 p-4 rounded-md">
               <legend className="px-2 font-semibold text-lime-700">4. Descrição Detalhada do Fato</legend>
-              <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required />
+              <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required error={errors.detailedDescription} />
           </fieldset>
           <fieldset className="border border-gray-300 p-4 rounded-md">
               <legend className="px-2 font-semibold text-lime-700">5. Pessoas Envolvidas</legend>
