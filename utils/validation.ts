@@ -3,20 +3,35 @@ import { Occurrence, OccurrenceType } from '../types';
 type FormData = Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status'>;
 
 export interface ValidationErrors {
+  schoolUnit?: string;
   student?: {
     fullName?: string;
     birthDate?: string;
+    grade?: string;
+    shift?: string;
+  };
+  guardian?: {
+    fullName?: string;
+    phone?: string;
   };
   occurrenceDate?: string;
   occurrenceTime?: string;
+  location?: string;
   occurrenceTypes?: string;
   otherOccurrenceType?: string;
   detailedDescription?: string;
+  involvedPeople?: string;
+  immediateActions?: string;
   [key: string]: any;
 }
 
 export const validateOccurrence = (data: FormData | Occurrence): ValidationErrors => {
   const errors: ValidationErrors = {};
+
+  // Unit validation
+  if (!data.schoolUnit?.trim()) {
+    errors.schoolUnit = 'A unidade escolar é obrigatória.';
+  }
 
   // Student Validation
   if (!data.student.fullName.trim()) {
@@ -30,6 +45,25 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
   } else if (new Date(data.student.birthDate) >= new Date()) {
     errors.student = { ...errors.student, birthDate: 'A data de nascimento deve ser no passado.' };
   }
+  
+  if (!data.student.grade?.trim()) {
+    errors.student = { ...errors.student, grade: 'O ano/série é obrigatório.' };
+  }
+  
+  if (!data.student.shift?.trim()) {
+    errors.student = { ...errors.student, shift: 'O turno é obrigatório.' };
+  }
+
+
+  // Guardian Validation
+  if (!data.guardian.fullName?.trim()) {
+    errors.guardian = { ...errors.guardian, fullName: 'O nome do responsável é obrigatório.' };
+  }
+
+  if (!data.guardian.phone?.trim()) {
+    errors.guardian = { ...errors.guardian, phone: 'O contato do responsável é obrigatório.' };
+  }
+
 
   // Occurrence Validation
   if (!data.occurrenceDate) {
@@ -40,6 +74,10 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
   
   if (!data.occurrenceTime) {
     errors.occurrenceTime = 'O horário aproximado é obrigatório.';
+  }
+
+  if (!data.location?.trim()) {
+    errors.location = 'O local da ocorrência é obrigatório.';
   }
 
   if (data.occurrenceTypes.length === 0) {
@@ -54,6 +92,14 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
     errors.detailedDescription = 'A descrição detalhada é obrigatória.';
   } else if (data.detailedDescription.trim().length < 10) {
     errors.detailedDescription = 'A descrição deve ter pelo menos 10 caracteres.';
+  }
+
+  if (!data.involvedPeople?.trim()) {
+    errors.involvedPeople = 'Informar as pessoas envolvidas é obrigatório.';
+  }
+  
+  if (!data.immediateActions?.trim()) {
+    errors.immediateActions = 'Informar as providências imediatas é obrigatório.';
   }
 
   return errors;

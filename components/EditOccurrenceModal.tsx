@@ -5,9 +5,9 @@ import { TextAreaInput } from './TextAreaInput';
 import { SelectInput } from './SelectInput';
 import { Button } from './Button';
 import { CloseIcon } from './icons/CloseIcon';
-import { CheckboxInput } from './CheckboxInput';
 import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
 import { validateOccurrence, ValidationErrors } from '../utils/validation';
+import { MultiSelectTagInput } from './MultiSelectTagInput';
 
 interface EditOccurrenceModalProps {
   isOpen: boolean;
@@ -61,17 +61,6 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
     }
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target;
-    const type = value as OccurrenceType;
-    setFormData(prev => {
-      const newTypes = checked
-        ? [...prev.occurrenceTypes, type]
-        : prev.occurrenceTypes.filter(t => t !== type);
-      return { ...prev, occurrenceTypes: newTypes };
-    });
-  };
-
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const validationErrors = validateOccurrence(formData);
@@ -98,7 +87,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
           <fieldset className="border border-gray-300 p-4 rounded-md">
             <legend className="px-2 font-semibold text-lime-700">Dados da Unidade</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange}>
+              <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit}>
                 {SCHOOL_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
               </SelectInput>
               <TextInput label="Município" id="municipality" name="municipality" value={formData.municipality} onChange={handleChange} />
@@ -113,19 +102,19 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required className="md:col-span-2" error={errors.student?.fullName} />
               <TextInput label="Nº de Matrícula" id="student.enrollmentId" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
-              <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} error={errors.student?.birthDate} />
+              <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
               <TextInput label="Idade" id="student.age" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="bg-gray-100" />
-              <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} />
-              <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} />
+              <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
+              <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
             </div>
           </fieldset>
 
           <fieldset className="border border-gray-300 p-4 rounded-md">
             <legend className="px-2 font-semibold text-lime-700">2. Responsável Legal</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput label="Nome Completo" id="guardian.fullName" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} />
+                <TextInput label="Nome Completo" id="guardian.fullName" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName} />
                 <TextInput label="Parentesco" id="guardian.relationship" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
-                <TextInput label="Contato Telefônico" id="guardian.phone" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} />
+                <TextInput label="Contato Telefônico" id="guardian.phone" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
                 <TextInput label="Endereço Completo" id="guardian.address" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2"/>
             </div>
           </fieldset>
@@ -134,20 +123,30 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             <legend className="px-2 font-semibold text-lime-700">3. Caracterização da Ocorrência</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
-                <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} error={errors.occurrenceTime} />
-                <TextInput label="Local onde ocorreu" id="location" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" />
+                <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} required error={errors.occurrenceTime} />
+                <TextInput label="Local onde ocorreu" id="location" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" required error={errors.location} />
             </div>
             <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Ocorrência:</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {OCCURRENCE_TYPES.map(type => (
-                    <CheckboxInput key={type} id={`edit-type-${type}`} label={type} value={type} checked={formData.occurrenceTypes.includes(type)} onChange={handleCheckboxChange} />
-                    ))}
+              <MultiSelectTagInput
+                label="Tipo de Ocorrência"
+                id="occurrenceTypes-edit"
+                options={OCCURRENCE_TYPES}
+                selectedOptions={formData.occurrenceTypes}
+                onChange={(selected) => setFormData(prev => ({ ...prev, occurrenceTypes: selected }))}
+                error={errors.occurrenceTypes}
+              />
+              {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
+                <div className="mt-4">
+                  <TextInput
+                    label="Especifique 'Outros'"
+                    id="otherOccurrenceType-edit"
+                    name="otherOccurrenceType"
+                    value={formData.otherOccurrenceType}
+                    onChange={handleChange}
+                    error={errors.otherOccurrenceType}
+                  />
                 </div>
-                 {errors.occurrenceTypes && <p className="mt-1 text-xs text-red-600">{errors.occurrenceTypes}</p>}
-                {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
-                    <TextInput label="Especifique 'Outros'" id="otherOccurrenceType" name="otherOccurrenceType" value={formData.otherOccurrenceType} onChange={handleChange} className="mt-2" error={errors.otherOccurrenceType} />
-                )}
+              )}
             </div>
           </fieldset>
 
@@ -157,11 +156,11 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
           </fieldset>
           <fieldset className="border border-gray-300 p-4 rounded-md">
               <legend className="px-2 font-semibold text-lime-700">5. Pessoas Envolvidas</legend>
-              <TextAreaInput label="Incluir nome, cargo/função e vínculo." id="involvedPeople" name="involvedPeople" value={formData.involvedPeople} onChange={handleChange} rows={3} />
+              <TextAreaInput label="Incluir nome, cargo/função e vínculo." id="involvedPeople" name="involvedPeople" value={formData.involvedPeople} onChange={handleChange} rows={3} required error={errors.involvedPeople} />
           </fieldset>
           <fieldset className="border border-gray-300 p-4 rounded-md">
               <legend className="px-2 font-semibold text-lime-700">6. Providências Imediatas Adotadas</legend>
-              <TextAreaInput id="immediateActions" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={3} />
+              <TextAreaInput id="immediateActions" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={3} required error={errors.immediateActions} />
           </fieldset>
           <fieldset className="border border-gray-300 p-4 rounded-md">
               <legend className="px-2 font-semibold text-lime-700">7. Encaminhamentos Realizados</legend>
