@@ -43,7 +43,7 @@ export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[
     const tableHeaders = selectedColumns.map(c => c.label);
 
     doc.setFontSize(18);
-    doc.setTextColor(34, 139, 34);
+    doc.setTextColor(21, 128, 61); // green-700
     doc.text('Relatório de Ocorrências Escolares', 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
@@ -61,7 +61,7 @@ export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[
             body: tableRows,
             startY,
             theme: 'grid',
-            headStyles: { fillColor: [34, 139, 34] },
+            headStyles: { fillColor: [21, 128, 61] }, // green-700
             styles: { fontSize: 8, cellPadding: 1.5 },
             didDrawPage: (data: any) => {
                 // We'll add footers after all tables are drawn
@@ -93,7 +93,7 @@ export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[
             }
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(22, 101, 52);
+            doc.setTextColor(22, 101, 52); // green-800
             doc.text(`${groupingLabel}: ${groupName}`, 14, startY);
             startY += 6;
             generateTableForData(groupedData[groupName]);
@@ -221,11 +221,11 @@ export const generateSingleOccurrencePdf = (occ: Occurrence): string | void => {
     let y = MARGIN;
 
     const drawSectionHeader = (title: string) => {
-        doc.setFillColor(220, 252, 231); // lime-100
+        doc.setFillColor(220, 252, 231); // green-100
         doc.rect(MARGIN, y, WIDTH - MARGIN * 2, 8, 'F');
         doc.setFontSize(FONT_SIZE_L);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(22, 101, 52); // lime-800
+        doc.setTextColor(22, 101, 52); // green-800
         doc.text(title, MARGIN + 2, y + 5.5);
         y += 12;
     };
@@ -348,6 +348,30 @@ export const generateSingleOccurrencePdf = (occ: Occurrence): string | void => {
     y += 20;
     doc.line(MARGIN, y, MARGIN + 80, y);
     doc.text('Assinatura da(o) Assistente Social', MARGIN, y + 4);
+    y+= 10;
+
+    // Audit Log Section
+    if ((occ.auditLog || []).length > 0) {
+      if (y > 220) { doc.addPage(); y = MARGIN; }
+      drawSectionHeader('10. HISTÓRICO DE ALTERAÇÕES');
+      doc.setFontSize(FONT_SIZE_S);
+      doc.setFont('helvetica', 'normal');
+      occ.auditLog.forEach(log => {
+          if (y > 270) { doc.addPage(); y = MARGIN; }
+          const logDate = new Date(log.timestamp).toLocaleString('pt-BR');
+          const logText = `${logDate} - ${log.action} por ${log.user}:`;
+          const detailsLines = doc.splitTextToSize(`" ${log.details} "`, WIDTH - (MARGIN * 2) - 5);
+          
+          doc.setFont('helvetica', 'bold');
+          doc.text(logText, MARGIN, y);
+          y += LINE_HEIGHT - 1;
+          
+          doc.setFont('helvetica', 'italic');
+          doc.text(detailsLines, MARGIN + 2, y);
+          y += (detailsLines.length * (LINE_HEIGHT - 1.5)) + 4; // add some padding
+      });
+    }
+
 
     doc.save(`ficha_ocorrencia_${occ.student.fullName.replace(/ /g, '_')}_${occ.id}.pdf`);
 };

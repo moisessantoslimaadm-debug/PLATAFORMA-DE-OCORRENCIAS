@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface TextAreaInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -9,17 +8,17 @@ interface TextAreaInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
 
 export const TextAreaInput: React.FC<TextAreaInputProps> = ({ label, id, error, className, ...props }) => {
   const errorClass = "border-red-500 focus:border-red-500 focus:ring-red-500";
-  const defaultClass = "border-gray-300 focus:border-lime-500 focus:ring-lime-500";
+  const defaultClass = "border-gray-600 focus:border-green-500 focus:ring-green-500";
 
   return (
     <div>
       {label && <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
+        {label} {props.required && <span className="text-red-500">*</span>}
       </label>}
       <textarea
         id={id}
         {...props}
-        className={`block w-full px-3 py-2 bg-white border rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm ${error ? errorClass : defaultClass} ${className || ''}`}
+        className={`block w-full px-3 py-2 bg-gray-700 text-gray-200 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-700 sm:text-sm ${error ? errorClass : defaultClass} ${className || ''}`}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
       ></textarea>

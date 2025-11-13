@@ -23,13 +23,22 @@ export interface Student {
   grade: string;
   shift: string;
   enrollmentId: string;
+  photoUrl?: string; // Placeholder for visual representation
 }
 
 export interface Guardian {
-  fullName: string;
+  fullName:string;
   relationship: string;
   phone: string;
   address: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  timestamp: string;
+  user: string;
+  action: 'Criação da Ficha' | 'Edição de Dados' | 'Atualização de Status';
+  details: string;
 }
 
 export interface Occurrence {
@@ -65,6 +74,7 @@ export interface Occurrence {
   status: OccurrenceStatus;
   createdAt: string;
   updatedAt: string;
+  auditLog: AuditEntry[];
 }
 
 export interface Toast {

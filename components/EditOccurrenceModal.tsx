@@ -19,10 +19,12 @@ interface EditOccurrenceModalProps {
 const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occurrence, onClose, onSave }) => {
   const [formData, setFormData] = useState(occurrence);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
     setFormData(occurrence);
     setErrors({}); // Reset errors when a new occurrence is opened
+    setHasSubmitted(false);
   }, [occurrence]);
 
   useEffect(() => {
@@ -46,6 +48,12 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
     }
   }, [formData.student.birthDate]);
 
+  useEffect(() => {
+    if (hasSubmitted) {
+        setErrors(validateOccurrence(formData));
+    }
+  }, [formData, hasSubmitted]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section?: keyof typeof occurrence) => {
     const { name, value } = e.target;
     if (section) {
@@ -63,6 +71,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasSubmitted(true);
     const validationErrors = validateOccurrence(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -78,53 +87,51 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold text-lime-800">Editar Ficha de Ocorrência</h2>
+          <h2 className="text-xl font-bold text-gray-800">Editar Ficha de Ocorrência</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200" aria-label="Fechar modal">
              <CloseIcon className="h-6 w-6 text-gray-600" />
           </button>
         </div>
-        <form onSubmit={handleSave} className="p-6 space-y-6 overflow-y-auto">
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">Dados da Unidade</legend>
+        <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit}>
-                {SCHOOL_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
-              </SelectInput>
-              <TextInput label="Município" id="municipality" name="municipality" value={formData.municipality} onChange={handleChange} />
-              <TextInput label="UF" id="uf" name="uf" value={formData.uf} onChange={handleChange} />
-              <TextInput label="Data de Preenchimento" id="fillingDate" name="fillingDate" type="date" value={formData.fillingDate} onChange={handleChange} />
-              <TextInput label="Horário" id="fillingTime" name="fillingTime" type="time" value={formData.fillingTime} onChange={handleChange} />
+              <div className="md:col-span-3">
+                <SelectInput label="Unidade Escolar" id="schoolUnit-edit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit} required>
+                    {SCHOOL_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+                </SelectInput>
+              </div>
+              <div className="md:col-span-2">
+                <TextInput label="Município" id="municipality-edit" name="municipality" value={formData.municipality} onChange={handleChange} />
+              </div>
+              <TextInput label="UF" id="uf-edit" name="uf" value={formData.uf} onChange={handleChange} />
+              <TextInput label="Data de Preenchimento" id="fillingDate-edit" name="fillingDate" type="date" value={formData.fillingDate} onChange={handleChange} />
+              <TextInput label="Horário" id="fillingTime-edit" name="fillingTime" type="time" value={formData.fillingTime} onChange={handleChange} />
             </div>
-          </fieldset>
           
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">1. Identificação do Aluno</legend>
+            <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">1. Identificação do Aluno</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required className="md:col-span-2" error={errors.student?.fullName} />
-              <TextInput label="Nº de Matrícula" id="student.enrollmentId" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
-              <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
-              <TextInput label="Idade" id="student.age" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="bg-gray-100" />
-              <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
-              <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
+              <div className="md:col-span-2">
+                <TextInput label="Nome Completo" id="student.fullName-edit" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
+              </div>
+              <TextInput label="Nº de Matrícula" id="student.enrollmentId-edit" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
+              <TextInput label="Data de Nascimento" id="student.birthDate-edit" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
+              <TextInput label="Idade" id="student.age-edit" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="!bg-gray-600" />
+              <TextInput label="Ano/Série" id="student.grade-edit" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
+              <TextInput label="Turno" id="student.shift-edit" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
             </div>
-          </fieldset>
 
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">2. Responsável Legal</legend>
+            <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">2. Responsável Legal</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput label="Nome Completo" id="guardian.fullName" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName} />
-                <TextInput label="Parentesco" id="guardian.relationship" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
-                <TextInput label="Contato Telefônico" id="guardian.phone" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
-                <TextInput label="Endereço Completo" id="guardian.address" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2"/>
+                <TextInput label="Nome Completo" id="guardian.fullName-edit" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName} />
+                <TextInput label="Parentesco" id="guardian.relationship-edit" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
+                <TextInput label="Contato Telefônico" id="guardian.phone-edit" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
+                <TextInput label="Endereço Completo" id="guardian.address-edit" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2"/>
             </div>
-          </fieldset>
 
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">3. Caracterização da Ocorrência</legend>
+            <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">3. Caracterização da Ocorrência</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
-                <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} required error={errors.occurrenceTime} />
-                <TextInput label="Local onde ocorreu" id="location" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" required error={errors.location} />
+                <TextInput label="Data da Ocorrência" id="occurrenceDate-edit" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
+                <TextInput label="Horário Aproximado" id="occurrenceTime-edit" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} required error={errors.occurrenceTime} />
+                <TextInput label="Local onde ocorreu" id="location-edit" name="location" value={formData.location} onChange={handleChange} className="md:col-span-2" required error={errors.location} />
             </div>
             <div className="mt-4">
               <MultiSelectTagInput
@@ -134,6 +141,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
                 selectedOptions={formData.occurrenceTypes}
                 onChange={(selected) => setFormData(prev => ({ ...prev, occurrenceTypes: selected }))}
                 error={errors.occurrenceTypes}
+                required
               />
               {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
                 <div className="mt-4">
@@ -148,28 +156,13 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
                 </div>
               )}
             </div>
-          </fieldset>
 
-           <fieldset className="border border-gray-300 p-4 rounded-md">
-              <legend className="px-2 font-semibold text-lime-700">4. Descrição Detalhada do Fato</legend>
-              <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required error={errors.detailedDescription} />
-          </fieldset>
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-              <legend className="px-2 font-semibold text-lime-700">5. Pessoas Envolvidas</legend>
-              <TextAreaInput label="Incluir nome, cargo/função e vínculo." id="involvedPeople" name="involvedPeople" value={formData.involvedPeople} onChange={handleChange} rows={3} required error={errors.involvedPeople} />
-          </fieldset>
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-              <legend className="px-2 font-semibold text-lime-700">6. Providências Imediatas Adotadas</legend>
-              <TextAreaInput id="immediateActions" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={3} required error={errors.immediateActions} />
-          </fieldset>
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-              <legend className="px-2 font-semibold text-lime-700">7. Encaminhamentos Realizados</legend>
-              <TextAreaInput label="Órgãos da rede, familiares, equipe interna." id="referrals" name="referrals" value={formData.referrals} onChange={handleChange} rows={3} />
-          </fieldset>
-          <fieldset className="border border-gray-300 p-4 rounded-md">
-              <legend className="px-2 font-semibold text-lime-700">8. Avaliação do Serviço Social</legend>
-              <TextAreaInput id="socialServiceEvaluation" name="socialServiceEvaluation" value={formData.socialServiceEvaluation} onChange={handleChange} rows={3} />
-          </fieldset>
+            <h3 className="text-lg font-semibold text-gray-700 pt-2 border-b pb-2">4. Descrição, Providências e Encaminhamentos</h3>
+            <TextAreaInput label="Descrição Detalhada do Fato" id="detailedDescription-edit" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={4} required error={errors.detailedDescription} />
+            <TextAreaInput label="Pessoas Envolvidas" id="involvedPeople-edit" name="involvedPeople" value={formData.involvedPeople} onChange={handleChange} rows={2} required error={errors.involvedPeople} />
+            <TextAreaInput label="Providências Imediatas Adotadas" id="immediateActions-edit" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={2} required error={errors.immediateActions} />
+            <TextAreaInput label="Encaminhamentos Realizados" id="referrals-edit" name="referrals" value={formData.referrals} onChange={handleChange} rows={2} />
+            <TextAreaInput label="Avaliação do Serviço Social" id="socialServiceEvaluation-edit" name="socialServiceEvaluation" value={formData.socialServiceEvaluation} onChange={handleChange} rows={2} />
           
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={onClose} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">

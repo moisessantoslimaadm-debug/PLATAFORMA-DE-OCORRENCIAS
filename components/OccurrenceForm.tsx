@@ -7,15 +7,34 @@ import { Button } from './Button';
 import { SCHOOL_UNITS, OCCURRENCE_TYPES } from '../constants';
 import { validateOccurrence, ValidationErrors } from '../utils/validation';
 import { MultiSelectTagInput } from './MultiSelectTagInput';
+import { UserCircleIcon } from './icons/UserCircleIcon';
+
+
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const FormSection: React.FC<SectionProps> = ({ title, children }) => (
+  <div className="mt-8">
+    <div className="bg-green-700 text-white font-bold p-3 w-full text-lg rounded-t-md">
+      <h3>{title}</h3>
+    </div>
+    <div className="p-4 border border-t-0 rounded-b-md border-gray-200">
+      {children}
+    </div>
+  </div>
+);
+
 
 interface OccurrenceFormProps {
-  onSubmit: (data: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => void;
+  onSubmit: (data: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => void;
 }
 
 const initialFormData = {
-  schoolUnit: SCHOOL_UNITS[0],
-  municipality: 'Itaberaba',
-  uf: 'BA',
+  schoolUnit: SCHOOL_UNITS[4],
+  municipality: 'Belo Horizonte',
+  uf: 'MG',
   fillingDate: new Date().toISOString().split('T')[0],
   fillingTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
   student: {
@@ -47,6 +66,7 @@ const initialFormData = {
 const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   
   useEffect(() => {
     if (formData.student.birthDate) {
@@ -69,6 +89,12 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
     }
   }, [formData.student.birthDate]);
 
+  useEffect(() => {
+    if (hasSubmitted) {
+        setErrors(validateOccurrence(formData));
+    }
+  }, [formData, hasSubmitted]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section?: keyof typeof initialFormData) => {
     const { name, value } = e.target;
     if (section) {
@@ -86,6 +112,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasSubmitted(true);
     const validationErrors = validateOccurrence(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -94,49 +121,78 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
     setErrors({});
     onSubmit(formData);
     setFormData(initialFormData);
+    setHasSubmitted(false);
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg border border-lime-200">
-      <h2 className="text-2xl font-bold text-lime-800 mb-6">Nova Ficha de Ocorrência</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="px-2 font-semibold text-lime-700">Dados da Unidade</legend>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit}>
-              {SCHOOL_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
-            </SelectInput>
-            <TextInput label="Município" id="municipality" name="municipality" value={formData.municipality} onChange={handleChange} />
-            <TextInput label="UF" id="uf" name="uf" value={formData.uf} onChange={handleChange} />
-            <TextInput label="Data de Preenchimento" id="fillingDate" name="fillingDate" type="date" value={formData.fillingDate} onChange={handleChange} />
-            <TextInput label="Horário" id="fillingTime" name="fillingTime" type="time" value={formData.fillingTime} onChange={handleChange} />
-          </div>
-        </fieldset>
-        
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="px-2 font-semibold text-lime-700">1. Identificação do Aluno Envolvido</legend>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
-            <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
-            <TextInput label="Idade" id="student.age" name="age" type="number" value={formData.student.age} onChange={e => handleChange(e, 'student')} readOnly className="bg-gray-100" />
-            <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
-            <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
-            <TextInput label="Nº de Matrícula" id="student.enrollmentId" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
-          </div>
-        </fieldset>
+    <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+      <div className="bg-green-700 text-white p-6 rounded-lg -mx-6 -mt-6 mb-6 text-center">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            FICHA DE REGISTRO DE OCORRÊNCIA ESCOLAR
+          </h1>
+          <p className="text-sm md:text-md text-green-200 mt-1">
+            Plataforma Inteligente de Registro de Situações Críticas
+          </p>
+      </div>
 
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="px-2 font-semibold text-lime-700">2. Responsável Legal</legend>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="border border-gray-200 p-4 rounded-md">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div className="md:col-span-6">
+                    <SelectInput label="Unidade Escolar" id="schoolUnit" name="schoolUnit" value={formData.schoolUnit} onChange={handleChange} error={errors.schoolUnit} required>
+                    {SCHOOL_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+                    </SelectInput>
+                </div>
+                <div className="md:col-span-4">
+                     <TextInput label="Município" id="municipality" name="municipality" value={formData.municipality} onChange={handleChange} />
+                </div>
+                 <div className="md:col-span-2">
+                    <TextInput label="UF" id="uf" name="uf" value={formData.uf} onChange={handleChange} />
+                 </div>
+                 <div className="md:col-span-3">
+                    <TextInput label="Data de Preenchimento" id="fillingDate" name="fillingDate" type="date" value={formData.fillingDate} onChange={handleChange} />
+                </div>
+                 <div className="md:col-span-3">
+                    <TextInput label="Horário" id="fillingTime" name="fillingTime" type="time" value={formData.fillingTime} onChange={handleChange} />
+                 </div>
+            </div>
+        </div>
+        
+        <FormSection title="1. IDENTIFICAÇÃO DO ALUNO ENVOLVIDO">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col items-center justify-center md:col-span-1">
+                <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 mb-2">
+                    <UserCircleIcon className="w-24 h-24" />
+                </div>
+                <button type="button" className="text-sm text-center text-gray-600 border border-dashed border-gray-400 rounded-md px-3 py-1.5 hover:bg-gray-50">
+                    Carregar foto
+                </button>
+            </div>
+            <div className="md:col-span-2 space-y-4">
+                 <TextInput label="Nome Completo" id="student.fullName" name="fullName" value={formData.student.fullName} onChange={e => handleChange(e, 'student')} required error={errors.student?.fullName} />
+                <div className="grid grid-cols-2 gap-4">
+                    <TextInput label="Data de Nascimento" id="student.birthDate" name="birthDate" type="date" value={formData.student.birthDate} onChange={e => handleChange(e, 'student')} required error={errors.student?.birthDate} />
+                    <TextInput label="Idade (anos)" id="student.age" name="age" type="number" value={formData.student.age} readOnly className="!bg-gray-200 !text-gray-800" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <TextInput label="Nº de Matrícula" id="student.enrollmentId" name="enrollmentId" value={formData.student.enrollmentId} onChange={e => handleChange(e, 'student')} />
+                    <TextInput label="Ano/Série" id="student.grade" name="grade" value={formData.student.grade} onChange={e => handleChange(e, 'student')} required error={errors.student?.grade} />
+                </div>
+                <TextInput label="Turno" id="student.shift" name="shift" value={formData.student.shift} onChange={e => handleChange(e, 'student')} required error={errors.student?.shift} />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="2. RESPONSÁVEL LEGAL">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TextInput label="Nome Completo" id="guardian.fullName" name="fullName" value={formData.guardian.fullName} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.fullName}/>
             <TextInput label="Parentesco" id="guardian.relationship" name="relationship" value={formData.guardian.relationship} onChange={e => handleChange(e, 'guardian')} />
             <TextInput label="Contato Telefônico" id="guardian.phone" name="phone" value={formData.guardian.phone} onChange={e => handleChange(e, 'guardian')} required error={errors.guardian?.phone} />
             <TextInput label="Endereço Completo" id="guardian.address" name="address" value={formData.guardian.address} onChange={e => handleChange(e, 'guardian')} className="md:col-span-2" />
           </div>
-        </fieldset>
+        </FormSection>
 
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="px-2 font-semibold text-lime-700">3. Caracterização da Ocorrência</legend>
+        <FormSection title="3. CARACTERIZAÇÃO DA OCORRÊNCIA">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextInput label="Data da Ocorrência" id="occurrenceDate" name="occurrenceDate" type="date" value={formData.occurrenceDate} onChange={handleChange} required error={errors.occurrenceDate} />
               <TextInput label="Horário Aproximado" id="occurrenceTime" name="occurrenceTime" type="time" value={formData.occurrenceTime} onChange={handleChange} required error={errors.occurrenceTime} />
@@ -150,6 +206,7 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
                 selectedOptions={formData.occurrenceTypes}
                 onChange={(selected) => setFormData(prev => ({ ...prev, occurrenceTypes: selected }))}
                 error={errors.occurrenceTypes}
+                required
               />
               {formData.occurrenceTypes.includes(OccurrenceType.OTHER) && (
                 <div className="mt-4">
@@ -164,36 +221,33 @@ const OccurrenceForm: React.FC<OccurrenceFormProps> = ({ onSubmit }) => {
                 </div>
               )}
             </div>
-        </fieldset>
+        </FormSection>
 
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">4. Descrição Detalhada do Fato</legend>
+        <FormSection title="4. DESCRIÇÃO DETALHADA DO FATO">
              <TextAreaInput label="Relatar de forma objetiva, com sequência cronológica dos acontecimentos." id="detailedDescription" name="detailedDescription" value={formData.detailedDescription} onChange={handleChange} rows={5} required error={errors.detailedDescription} />
-        </fieldset>
+        </FormSection>
 
-         <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">5. Pessoas Envolvidas</legend>
+         <FormSection title="5. PESSOAS ENVOLVIDAS">
              <TextAreaInput label="Incluir nome, cargo/função e vínculo (alunos, funcionários, etc.)." id="involvedPeople" name="involvedPeople" value={formData.involvedPeople} onChange={handleChange} rows={3} required error={errors.involvedPeople} />
-        </fieldset>
+        </FormSection>
         
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">6. Providências Imediatas Adotadas</legend>
+        <FormSection title="6. PROVIDÊNCIAS IMEDIATAS ADOTADAS">
              <TextAreaInput id="immediateActions" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={3} required error={errors.immediateActions} />
-        </fieldset>
+        </FormSection>
         
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">7. Encaminhamentos Realizados</legend>
+        <FormSection title="7. ENCAMINHAMENTOS REALIZADOS">
              <TextAreaInput label="Órgãos da rede, familiares, equipe interna." id="referrals" name="referrals" value={formData.referrals} onChange={handleChange} rows={3} />
-        </fieldset>
+        </FormSection>
 
-        <fieldset className="border border-gray-300 p-4 rounded-md">
-            <legend className="px-2 font-semibold text-lime-700">8. Avaliação e Observações do Serviço Social (se houver)</legend>
+        <FormSection title="8. AVALIAÇÃO E OBSERVAÇÕES DO SERVIÇO SOCIAL (SE HOUVER)">
              <TextAreaInput id="socialServiceEvaluation" name="socialServiceEvaluation" value={formData.socialServiceEvaluation} onChange={handleChange} rows={3} />
-        </fieldset>
+        </FormSection>
 
-        <Button type="submit">
-          Registrar Ocorrência
-        </Button>
+        <div className="pt-4">
+            <Button type="submit">
+            Registrar Ocorrência
+            </Button>
+        </div>
       </form>
     </div>
   );

@@ -12,7 +12,7 @@ export const CheckboxInput: React.FC<CheckboxInputProps> = ({ label, id, ...prop
         id={id}
         type="checkbox"
         {...props}
-        className="h-4 w-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+        className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
       />
       <label htmlFor={id} className="ml-2 block text-sm text-gray-900">
         {label}

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Occurrence, OccurrenceStatus } from '../types';
-import { Tag } from './Tag';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { PrintIcon } from './icons/PrintIcon';
+import { ClockIcon } from './icons/ClockIcon';
+import { UserCircleIcon } from './icons/UserCircleIcon';
+import { ChevronDownIcon } from './icons/ChevronDownIcon';
 
 interface OccurrenceItemProps {
   occurrence: Occurrence;
@@ -13,78 +15,117 @@ interface OccurrenceItemProps {
   onGenerateSinglePdf: (occurrence: Occurrence) => void;
 }
 
-const statusColors: { [key in OccurrenceStatus]: string } = {
-  [OccurrenceStatus.OPEN]: 'bg-blue-100 text-blue-800',
-  [OccurrenceStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-800',
-  [OccurrenceStatus.RESOLVED]: 'bg-green-100 text-green-800',
-  [OccurrenceStatus.CLOSED]: 'bg-gray-100 text-gray-800',
-};
-
-
 const OccurrenceItem: React.FC<OccurrenceItemProps> = ({ occurrence, onUpdateStatus, onDeleteRequest, onEditRequest, onGenerateSinglePdf }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+  
+  const formatTimestamp = (isoString: string) => {
+    if (!isoString) return '';
+    return new Date(isoString).toLocaleString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+  }
 
-  const mainOccurrenceType = occurrence.occurrenceTypes[0] || 'Não especificado';
+  const occurrenceTypesText = occurrence.occurrenceTypes.join(', ');
 
   return (
-    <div className="border border-lime-200 bg-lime-50 rounded-lg p-4 transition-shadow hover:shadow-md">
-      <div className="flex flex-col sm:flex-row justify-between items-start">
-        <div>
-          <h3 className="text-lg font-bold text-lime-900">{occurrence.student.fullName}</h3>
-          <p className="text-sm text-gray-500 mb-2">
-            ID: {occurrence.id} | Data: {new Date(occurrence.occurrenceDate).toLocaleDateString('pt-BR')}
-          </p>
+    <div className="border border-gray-200 bg-white rounded-lg p-3 transition-shadow hover:shadow-md">
+      <div 
+        className="flex items-center justify-between cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 text-gray-300">
+             <UserCircleIcon className="h-10 w-10" />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-bold text-gray-800 truncate">{occurrence.student.fullName}</h4>
+            <p className="text-xs text-gray-500 truncate" title={occurrenceTypesText}>
+              {occurrenceTypesText}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <Tag text={occurrence.status} color={statusColors[occurrence.status]} />
-        </div>
-      </div>
-      <div className="my-3 space-y-2">
-        <p className="text-gray-700">
-            <strong>Tipo Principal:</strong> <span className="font-medium text-lime-800">{mainOccurrenceType}</span>
-            {occurrence.occurrenceTypes.length > 1 && <span className="text-gray-500 text-sm"> (+{occurrence.occurrenceTypes.length - 1})</span>}
-        </p>
-         <p className="text-sm text-gray-600"><strong>Unidade Escolar:</strong> {occurrence.schoolUnit}</p>
+        <ChevronDownIcon className={`h-5 w-5 text-gray-400 transition-transform ${isExpanded ? 'transform rotate-180' : ''}`} />
       </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <div>
-           <select
-            value={occurrence.status}
-            onChange={(e) => onUpdateStatus(occurrence.id, e.target.value as OccurrenceStatus)}
-            className="text-sm bg-white border border-gray-300 rounded-md py-1 px-2 focus:ring-lime-500 focus:border-lime-500"
-          >
-            {Object.values(OccurrenceStatus).map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 font-medium">Status:</span>
+                <select
+                    value={occurrence.status}
+                    onChange={(e) => onUpdateStatus(occurrence.id, e.target.value as OccurrenceStatus)}
+                    onClick={(e) => e.stopPropagation()} // Prevent closing when clicking select
+                    className="text-sm bg-gray-100 border border-gray-300 rounded-md py-1 px-2 focus:ring-green-500 focus:border-green-500"
+                >
+                    {Object.values(OccurrenceStatus).map(s => (
+                    <option key={s} value={s}>{s}</option>
+                    ))}
+                </select>
+            </div>
+             <div className="flex items-center space-x-1 justify-end">
+                <button 
+                    onClick={() => setIsHistoryVisible(!isHistoryVisible)} 
+                    className="p-2 text-gray-500 hover:text-green-700 hover:bg-green-100 rounded-full transition-colors"
+                    aria-label="Ver histórico" title="Ver Histórico"
+                >
+                    <ClockIcon className="h-5 w-5" />
+                </button>
+                <button 
+                    onClick={() => onGenerateSinglePdf(occurrence)} 
+                    className="p-2 text-gray-500 hover:text-blue-700 hover:bg-blue-100 rounded-full transition-colors"
+                    aria-label="Imprimir Ficha" title="Imprimir Ficha"
+                >
+                    <PrintIcon className="h-5 w-5" />
+                </button>
+                <button 
+                    onClick={() => onEditRequest(occurrence)} 
+                    className="p-2 text-gray-500 hover:text-green-700 hover:bg-green-100 rounded-full transition-colors"
+                    aria-label="Editar ocorrência" title="Editar Ocorrência"
+                >
+                    <PencilIcon className="h-5 w-5" />
+                </button>
+                <button 
+                    onClick={() => onDeleteRequest(occurrence.id)} 
+                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                    aria-label="Excluir ocorrência" title="Excluir Ocorrência"
+                >
+                    <TrashIcon className="h-5 w-5" />
+                </button>
+            </div>
+             {isHistoryVisible && (
+                <div className="pt-3 border-t border-gray-200">
+                <h5 className="text-sm font-semibold text-gray-700 mb-2">Histórico de Alterações</h5>
+                 <div className="flow-root max-h-48 overflow-y-auto">
+                    <ul className="-mb-4">
+                    {(occurrence.auditLog || []).slice().reverse().map((log, logIndex) => (
+                        <li key={log.id}>
+                        <div className="relative pb-4">
+                            {logIndex !== occurrence.auditLog.length - 1 ? (
+                            <span className="absolute top-2 left-2 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                            ) : null}
+                            <div className="relative flex items-start space-x-2">
+                            <div className="h-4 w-4 bg-gray-300 rounded-full flex items-center justify-center ring-4 ring-white">
+                                <ClockIcon className="h-2.5 w-2.5 text-white" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-500">
+                                {formatTimestamp(log.timestamp)} - <span className="font-medium text-gray-700">{log.action}</span>
+                                </p>
+                                <p className="text-xs text-gray-600 mt-0.5 italic">"{log.details}"</p>
+                            </div>
+                            </div>
+                        </div>
+                        </li>
+                    ))}
+                    </ul>
+                </div>
+                </div>
+            )}
         </div>
-        <div className="flex items-center space-x-1 sm:space-x-2">
-          <button 
-            onClick={() => onGenerateSinglePdf(occurrence)} 
-            className="p-2 text-gray-500 hover:text-blue-700 hover:bg-blue-100 rounded-full transition-colors"
-            aria-label="Imprimir Ficha"
-            title="Imprimir Ficha"
-          >
-            <PrintIcon className="h-5 w-5" />
-          </button>
-           <button 
-            onClick={() => onEditRequest(occurrence)} 
-            className="p-2 text-gray-500 hover:text-lime-700 hover:bg-lime-100 rounded-full transition-colors"
-            aria-label="Editar ocorrência"
-            title="Editar Ocorrência"
-          >
-            <PencilIcon className="h-5 w-5" />
-          </button>
-          <button 
-            onClick={() => onDeleteRequest(occurrence.id)} 
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
-            aria-label="Excluir ocorrência"
-            title="Excluir Ocorrência"
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

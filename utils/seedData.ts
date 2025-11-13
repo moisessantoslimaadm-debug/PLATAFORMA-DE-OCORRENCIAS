@@ -34,6 +34,22 @@ export const seedOccurrences: Occurrence[] = [
     status: OccurrenceStatus.IN_PROGRESS,
     createdAt: '2025-05-15T12:30:00Z',
     updatedAt: '2025-05-15T14:00:00Z',
+    auditLog: [
+      {
+        id: 'log-1715894361000',
+        timestamp: '2025-05-15T12:30:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      },
+      {
+        id: 'log-1715894361001',
+        timestamp: '2025-05-15T14:00:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Atualização de Status',
+        details: "Status alterado de 'Aberta' para 'Em Andamento'.",
+      },
+    ],
   },
   {
     id: 'OCC-1715892145',
@@ -68,6 +84,22 @@ export const seedOccurrences: Occurrence[] = [
     status: OccurrenceStatus.RESOLVED,
     createdAt: '2025-04-20T18:45:00Z',
     updatedAt: '2025-04-25T10:00:00Z',
+    auditLog: [
+      {
+        id: 'log-1715892145000',
+        timestamp: '2025-04-20T18:45:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      },
+       {
+        id: 'log-1715892145001',
+        timestamp: '2025-04-25T10:00:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Atualização de Status',
+        details: "Status alterado de 'Aberta' para 'Resolvida'.",
+      },
+    ],
   },
   {
     id: 'OCC-1715881234',
@@ -102,6 +134,22 @@ export const seedOccurrences: Occurrence[] = [
     status: OccurrenceStatus.CLOSED,
     createdAt: '2025-03-10T11:15:00Z',
     updatedAt: '2025-03-15T16:20:00Z',
+     auditLog: [
+      {
+        id: 'log-1715881234000',
+        timestamp: '2025-03-10T11:15:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      },
+      {
+        id: 'log-1715881234001',
+        timestamp: '2025-03-15T16:20:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Atualização de Status',
+        details: "Status alterado de 'Aberta' para 'Fechada'.",
+      },
+    ],
   },
   {
     id: 'OCC-1715875432',
@@ -137,6 +185,22 @@ export const seedOccurrences: Occurrence[] = [
     status: OccurrenceStatus.RESOLVED,
     createdAt: '2025-02-28T14:00:00Z',
     updatedAt: '2025-03-05T09:30:00Z',
+    auditLog: [
+      {
+        id: 'log-1715875432000',
+        timestamp: '2025-02-28T14:00:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      },
+      {
+        id: 'log-1715875432001',
+        timestamp: '2025-03-05T09:30:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Atualização de Status',
+        details: "Status alterado de 'Aberta' para 'Resolvida'.",
+      },
+    ],
   },
   {
     id: 'OCC-1715869876',
@@ -171,5 +235,14 @@ export const seedOccurrences: Occurrence[] = [
     status: OccurrenceStatus.OPEN,
     createdAt: '2025-05-20T17:00:00Z',
     updatedAt: '2025-05-20T17:00:00Z',
+    auditLog: [
+      {
+        id: 'log-1715869876000',
+        timestamp: '2025-05-20T17:00:00Z',
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      },
+    ],
   },
 ];

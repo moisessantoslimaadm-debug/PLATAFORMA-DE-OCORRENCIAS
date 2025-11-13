@@ -1,86 +1,64 @@
 import React, { useMemo } from 'react';
-import { Occurrence, OccurrenceStatus, OccurrenceType } from '../types';
+import { Occurrence, OccurrenceType } from '../types';
+import { OCCURRENCE_TYPE_COLORS } from '../constants';
 
 interface DashboardProps {
   occurrences: Occurrence[];
 }
 
-interface StatCardProps {
-  title: string;
-  value: number;
-  color: string;
-}
+const Dashboard: React.FC<DashboardProps> = ({ occurrences }) => {
+  const typeCounts = useMemo(() => {
+    const counts: { [key in OccurrenceType]: number } = {
+      [OccurrenceType.PHYSICAL_AGGRESSION]: 0,
+      [OccurrenceType.VERBAL_AGGRESSION]: 0,
+      [OccurrenceType.BULLYING]: 0,
+      [OccurrenceType.PROPERTY_DAMAGE]: 0,
+      [OccurrenceType.ESCAPE]: 0,
+      [OccurrenceType.SOCIAL_RISK]: 0,
+      [OccurrenceType.PROHIBITED_SUBSTANCES]: 0,
+      [OccurrenceType.OTHER]: 0,
+    };
+    
+    occurrences.forEach(occ => {
+      occ.occurrenceTypes.forEach(type => {
+        if (type in counts) {
+          counts[type]++;
+        }
+      });
+    });
+    
+    return Object.entries(counts) as [OccurrenceType, number][];
+  }, [occurrences]);
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, color }) => (
-  <div className={`p-4 rounded-lg shadow-md ${color}`}>
-    <p className="text-sm font-medium opacity-80">{title}</p>
-    <p className="text-3xl font-bold">{value}</p>
-  </div>
-);
+  const totalOccurrences = occurrences.length;
 
-const BarChart: React.FC<{ data: { name: string, value: number }[] }> = ({ data }) => {
-    if (data.length === 0) {
-        return <div className="flex items-center justify-center h-full text-gray-500">Nenhuma ocorrência registrada para exibir estatísticas.</div>;
-    }
-
-    const maxValue = Math.max(...data.map(d => d.value), 1);
-
-    return (
-        <div className="space-y-3 p-2">
-            {data.map(item => (
-                <div key={item.name} className="flex items-center">
-                    <div className="w-1/3 text-sm text-gray-600 truncate pr-2" title={item.name}>{item.name}</div>
-                    <div className="w-2/3 flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-5">
-                            <div
-                                className="bg-lime-600 h-5 rounded-full text-xs text-white flex items-center justify-end pr-2"
-                                style={{ width: `${(item.value / maxValue) * 100}%` }}
-                            >
-                                {item.value}
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Índice de Ocorrências</h3>
+        {totalOccurrences === 0 ? (
+           <div className="flex items-center justify-center h-full text-gray-500 py-8">Nenhuma ocorrência registrada.</div>
+        ) : (
+            <div className="space-y-3">
+            {typeCounts.map(([type, count]) => (
+                <div key={type}>
+                    <div className="flex justify-between text-sm mb-1 items-center">
+                        <span className="text-gray-600 truncate pr-2">{type}</span>
+                        <div className="flex items-center gap-2">
+                             <div className="w-20 h-4 bg-gray-200 rounded-md">
+                                {count > 0 &&
+                                    <div
+                                        className="h-4 rounded-md"
+                                        style={{ width: `100%`, backgroundColor: OCCURRENCE_TYPE_COLORS[type] }}
+                                    ></div>
+                                }
                             </div>
+                            <span className="font-semibold text-gray-800 w-4 text-right">{count}</span>
                         </div>
                     </div>
                 </div>
             ))}
         </div>
-    );
-};
-
-const Dashboard: React.FC<DashboardProps> = ({ occurrences }) => {
-  const stats = useMemo(() => {
-    const typeCounts: { [key in OccurrenceType]?: number } = {};
-    occurrences.forEach(occ => {
-      occ.occurrenceTypes.forEach(type => {
-        typeCounts[type] = (typeCounts[type] || 0) + 1;
-      });
-    });
-    
-    const sortedTypes = Object.entries(typeCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([name, value]) => ({ name, value: value! }));
-
-    return {
-      total: occurrences.length,
-      open: occurrences.filter(o => o.status === OccurrenceStatus.OPEN).length,
-      inProgress: occurrences.filter(o => o.status === OccurrenceStatus.IN_PROGRESS).length,
-      resolved: occurrences.filter(o => o.status === OccurrenceStatus.RESOLVED).length,
-      topTypes: sortedTypes,
-    };
-  }, [occurrences]);
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:col-span-2">
-             <StatCard title="Total de Fichas" value={stats.total} color="bg-lime-600 text-white" />
-             <StatCard title="Abertas" value={stats.open} color="bg-blue-500 text-white" />
-             <StatCard title="Em Andamento" value={stats.inProgress} color="bg-yellow-500 text-white" />
-             <StatCard title="Resolvidas" value={stats.resolved} color="bg-green-500 text-white" />
-        </div>
-        <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-md border">
-            <h3 className="text-lg font-bold text-lime-800 mb-2">Tipos de Ocorrência Mais Frequentes</h3>
-            <BarChart data={stats.topTypes} />
-        </div>
+        )}
     </div>
   );
 };

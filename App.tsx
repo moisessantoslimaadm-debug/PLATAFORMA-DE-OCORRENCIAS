@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Occurrence, OccurrenceStatus, Toast as ToastType } from './types';
-import Header from './components/Header';
+import { Occurrence, OccurrenceStatus, Toast as ToastType, AuditEntry } from './types';
 import OccurrenceForm from './components/OccurrenceForm';
 import OccurrenceList from './components/OccurrenceList';
 import Dashboard from './components/Dashboard';
@@ -10,6 +9,7 @@ import Toast from './components/Toast';
 import { generateExcelReport, generatePdfReport, generateSingleOccurrencePdf } from './utils/reportGenerator';
 import { seedOccurrences } from './utils/seedData';
 import { ReportOptions } from './components/ReportModal';
+import { generateChangeDetails } from './utils/auditHelper';
 
 const App: React.FC = () => {
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
@@ -52,36 +52,82 @@ const App: React.FC = () => {
     }, 5000);
   }, [removeToast]);
 
-  const addOccurrence = useCallback((occurrence: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
+  const addOccurrence = useCallback((occurrence: Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>) => {
+    const timestamp = new Date().toISOString();
     const newOccurrence: Occurrence = {
-      ...occurrence,
+      ...(occurrence as Omit<Occurrence, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'auditLog'>), // Cast to satisfy TS
       id: `OCC-${Date.now()}`,
       status: OccurrenceStatus.OPEN,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      auditLog: [{
+        id: `log-${Date.now()}`,
+        timestamp: timestamp,
+        user: 'Usuário do Sistema',
+        action: 'Criação da Ficha',
+        details: 'Ficha de ocorrência registrada no sistema.',
+      }]
     };
     setOccurrences(prev => [newOccurrence, ...prev]);
     addToast('Ocorrência registrada com sucesso!');
   }, [addToast]);
 
   const updateOccurrence = useCallback((updatedOccurrence: Occurrence) => {
+    const originalOccurrence = occurrences.find(o => o.id === updatedOccurrence.id);
+    if (!originalOccurrence) return;
+
+    const changeDetails = generateChangeDetails(originalOccurrence, updatedOccurrence);
+
+    let finalOccurrence = { ...updatedOccurrence };
+    const timestamp = new Date().toISOString();
+
+    if (changeDetails) {
+        const newLogEntry: AuditEntry = {
+          id: `log-${Date.now()}`,
+          timestamp,
+          user: 'Usuário do Sistema',
+          action: 'Edição de Dados',
+          details: changeDetails,
+        };
+        finalOccurrence.auditLog = [...(finalOccurrence.auditLog || []), newLogEntry];
+        finalOccurrence.updatedAt = timestamp;
+    }
+    
     setOccurrences(prev =>
       prev.map(occ =>
-        occ.id === updatedOccurrence.id 
-          ? { ...updatedOccurrence, updatedAt: new Date().toISOString() } 
-          : occ
+        occ.id === finalOccurrence.id ? finalOccurrence : occ
       )
     );
     setEditingOccurrence(null);
     addToast('Ocorrência atualizada com sucesso!');
-  }, [addToast]);
+  }, [occurrences, addToast]);
 
 
   const updateOccurrenceStatus = useCallback((id: string, status: OccurrenceStatus) => {
     setOccurrences(prev =>
-      prev.map(occ =>
-        occ.id === id ? { ...occ, status, updatedAt: new Date().toISOString() } : occ
-      )
+      prev.map(occ => {
+        if (occ.id === id) {
+          if (occ.status === status) return occ; // No change
+
+          const oldStatus = occ.status;
+          const timestamp = new Date().toISOString();
+          const newLogEntry: AuditEntry = {
+            id: `log-${Date.now()}`,
+            timestamp: timestamp,
+            user: 'Usuário do Sistema',
+            action: 'Atualização de Status',
+            details: `Status alterado de '${oldStatus}' para '${status}'.`,
+          };
+
+          return {
+            ...occ,
+            status,
+            updatedAt: timestamp,
+            auditLog: [...occ.auditLog, newLogEntry]
+          };
+        }
+        return occ;
+      })
     );
   }, []);
 
@@ -184,18 +230,25 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-lime-50 font-sans">
+    <div className="min-h-screen bg-gray-100 font-sans">
       <Toast toasts={toasts} onClose={removeToast} />
-      <Header />
-      <main className="container mx-auto p-4 md:p-8">
-        <Dashboard occurrences={occurrences} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          <div className="lg:col-span-1">
-            <OccurrenceForm 
-              onSubmit={addOccurrence} 
-            />
-          </div>
-          <div className="lg:col-span-2">
+      <main className="container mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <div className="lg:col-span-8">
+          <OccurrenceForm 
+            onSubmit={addOccurrence} 
+          />
+        </div>
+
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          <Dashboard occurrences={occurrences} />
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                Histórico
+                <span className="ml-2 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                    {filteredOccurrences.length}
+                </span>
+            </h3>
             <OccurrenceList
               occurrences={filteredOccurrences}
               searchTerm={searchTerm}
@@ -211,19 +264,6 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-      <div
-        className="fixed bottom-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-lg flex items-center gap-3 border"
-      >
-        <img 
-          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Z0eXN2ejNzcHYxdTU3ajczZHN1d3NoZThpY2xucXFpZHMybXh1eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LpB0b8I8hczzW/giphy.gif" 
-          alt="Carlton Banks dancing"
-          className="w-16 h-16 rounded-md object-cover"
-        />
-        <span className="font-semibold text-lime-800 text-sm">By Moisés</span>
-      </div>
-       <footer className="text-center p-4 text-sm text-lime-700">
-        Plataforma de Gestão de Ocorrências Escolares © {new Date().getFullYear()} - Prefeitura Municipal de Itaberaba
-      </footer>
 
       {editingOccurrence && (
         <EditOccurrenceModal

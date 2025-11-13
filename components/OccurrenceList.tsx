@@ -6,6 +6,7 @@ import { BackupIcon } from './icons/BackupIcon';
 import { RestoreIcon } from './icons/RestoreIcon';
 import ReportModal, { ReportOptions } from './ReportModal';
 import { DocumentReportIcon } from './icons/DocumentReportIcon';
+import { CsvIcon } from './icons/CsvIcon';
 
 interface OccurrenceListProps {
   occurrences: Occurrence[];
@@ -32,94 +33,83 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
   onBackup,
   onRestoreRequest,
 }) => {
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const filteredByStatusOccurrences = occurrences.filter(occ => {
-    if (statusFilter === 'all') return true;
-    return occ.status === statusFilter;
-  });
 
   const handleRestoreClick = () => {
     fileInputRef.current?.click();
   };
   
   const handleGenerateReport = (options: ReportOptions) => {
-    onGenerateReport(filteredByStatusOccurrences, options);
+    onGenerateReport(occurrences, options);
     setIsReportModalOpen(false);
   };
 
   return (
     <>
-    <div className="bg-white p-6 rounded-lg shadow-lg border border-lime-200">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-lime-800 whitespace-nowrap">Histórico de Fichas</h2>
-        <div className="flex flex-col-reverse sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Buscar por aluno ou ID..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-5 w-5 text-gray-400" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-             <button 
-              onClick={() => setIsReportModalOpen(true)}
-              className="flex items-center gap-2 py-2 px-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
-              aria-label="Gerar Relatório"
-              title="Gerar Relatório Customizado"
-            >
-              <DocumentReportIcon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={onBackup}
-              className="flex items-center gap-2 py-2 px-3 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors"
-              aria-label="Fazer Backup"
-              title="Fazer Backup dos Dados"
-            >
-              <BackupIcon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handleRestoreClick}
-              className="flex items-center gap-2 py-2 px-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
-              aria-label="Restaurar Backup"
-              title="Restaurar a partir de um Backup"
-            >
-              <RestoreIcon className="h-5 w-5" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={onRestoreRequest}
-              accept=".json"
-              className="hidden"
-            />
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="relative w-full">
+        <input
+          type="text"
+          placeholder="Nome do aluno..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full pl-4 pr-4 py-2 bg-gray-700 text-gray-200 border-gray-600 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-gray-400"
+        />
       </div>
       
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-            <button onClick={() => setStatusFilter('all')} className={`px-3 py-1 text-sm rounded-full transition-colors ${statusFilter === 'all' ? 'bg-lime-700 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>Todas</button>
-            {Object.values(OccurrenceStatus).map(status => (
-                 <button key={status} onClick={() => setStatusFilter(status)} className={`px-3 py-1 text-sm rounded-full transition-colors ${statusFilter === status ? 'bg-lime-700 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>{status}</button>
-            ))}
-        </div>
+      {/* Date filter placeholder */}
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <input type="text" placeholder="dd/mm/aaaa" onFocus={(e) => e.target.type='date'} onBlur={(e) => e.target.type='text'} className="w-full p-2 bg-gray-700 text-gray-200 border-gray-600 rounded-md placeholder-gray-400"/>
+        <input type="text" placeholder="dd/mm/aaaa" onFocus={(e) => e.target.type='date'} onBlur={(e) => e.target.type='text'} className="w-full p-2 bg-gray-700 text-gray-200 border-gray-600 rounded-md placeholder-gray-400"/>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-2">
+         <button 
+          onClick={() => setIsReportModalOpen(true)}
+          className="flex items-center justify-center gap-2 py-2 px-3 bg-green-100 text-green-800 rounded-md text-sm font-medium hover:bg-green-200 transition-colors"
+          aria-label="Exportar CSV"
+          title="Exportar para CSV"
+        >
+          <CsvIcon className="h-4 w-4" />
+          Exportar CSV
+        </button>
+        <button
+          onClick={onBackup}
+          className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-100 text-blue-800 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
+          aria-label="Fazer Backup"
+          title="Fazer Backup dos Dados (JSON)"
+        >
+          <BackupIcon className="h-4 w-4" />
+          Backup (JSON)
+        </button>
       </div>
 
-      {filteredByStatusOccurrences.length === 0 ? (
+       <button
+        onClick={handleRestoreClick}
+        className="w-full flex items-center justify-center gap-2 py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
+        aria-label="Importar Backup"
+        title="Importar a partir de um Backup (JSON)"
+      >
+        <RestoreIcon className="h-4 w-4" />
+        Importar Backup (JSON)
+      </button>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onRestoreRequest}
+        accept=".json"
+        className="hidden"
+      />
+
+
+      {occurrences.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500">Nenhuma ocorrência encontrada para os filtros aplicados.</p>
+          <p className="text-gray-500">Nenhuma ocorrência encontrada.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredByStatusOccurrences.map(occurrence => (
+        <div className="space-y-3 pt-4 max-h-96 overflow-y-auto">
+          {occurrences.map(occurrence => (
             <OccurrenceItem
               key={occurrence.id}
               occurrence={occurrence}
