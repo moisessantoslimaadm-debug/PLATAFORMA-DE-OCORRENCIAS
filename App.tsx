@@ -111,8 +111,12 @@ const App: React.FC = () => {
   }, [addToast]);
 
   const handleGenerateSinglePdf = useCallback((data: Occurrence) => {
-    addToast(`Gerando ficha para ${data.student.fullName}...`);
-    generateSingleOccurrencePdf(data);
+    const validationError = generateSingleOccurrencePdf(data);
+    if (validationError) {
+      addToast(validationError, 'error');
+    } else {
+      addToast(`Ficha de ${data.student.fullName} gerada com sucesso!`);
+    }
   }, [addToast]);
 
   // Backup and Restore Logic

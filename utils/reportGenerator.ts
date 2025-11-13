@@ -103,8 +103,54 @@ export const generateExcelReport = (occurrences: Occurrence[]): void => {
     window.XLSX.writeFile(workbook, 'relatorio_detalhado_ocorrencias.xlsx');
 };
 
+const validateOccurrenceForPdf = (occ: Occurrence): string[] => {
+    const missingFields: string[] = [];
+
+    // Helper to check nested properties
+    const getProperty = (obj: any, path: string) => path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
+
+    const requiredFields: { path: string; label: string }[] = [
+        { path: 'schoolUnit', label: 'Unidade Escolar' },
+        { path: 'student.fullName', label: 'Nome do Aluno' },
+        { path: 'student.birthDate', label: 'Data de Nascimento do Aluno' },
+        { path: 'student.grade', label: 'Ano/Série' },
+        { path: 'student.shift', label: 'Turno' },
+        { path: 'guardian.fullName', label: 'Nome do Responsável' },
+        { path: 'guardian.phone', label: 'Telefone do Responsável' },
+        { path: 'occurrenceDate', label: 'Data da Ocorrência' },
+        { path: 'occurrenceTime', label: 'Horário da Ocorrência' },
+        { path: 'location', label: 'Local da Ocorrência' },
+        { path: 'detailedDescription', label: 'Descrição Detalhada do Fato' },
+        { path: 'involvedPeople', label: 'Pessoas Envolvidas' },
+        { path: 'immediateActions', label: 'Providências Imediatas' },
+    ];
+
+    requiredFields.forEach(field => {
+        const value = getProperty(occ, field.path);
+        if (!value || (typeof value === 'string' && !value.trim())) {
+            missingFields.push(field.label);
+        }
+    });
+
+    if (occ.occurrenceTypes.length === 0) {
+        missingFields.push('Tipo de Ocorrência');
+    }
+
+    if (occ.occurrenceTypes.includes(OccurrenceType.OTHER) && !occ.otherOccurrenceType?.trim()) {
+        missingFields.push("Especificação para 'Outros'");
+    }
+
+    return missingFields;
+};
+
+
 // --- Generates a SINGLE occurrence PDF, formatted like the official form ---
-export const generateSingleOccurrencePdf = (occ: Occurrence): void => {
+export const generateSingleOccurrencePdf = (occ: Occurrence): string | void => {
+    const missingFields = validateOccurrenceForPdf(occ);
+    if (missingFields.length > 0) {
+        return `Não é possível gerar a ficha. Preencha os seguintes campos obrigatórios: ${missingFields.join(', ')}.`;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     const MARGIN = 15;
