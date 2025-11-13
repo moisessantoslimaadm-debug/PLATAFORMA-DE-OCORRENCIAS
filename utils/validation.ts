@@ -66,7 +66,7 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
   } else {
     const cleanedPhone = data.guardian.phone.trim().replace(/\D/g, '');
     if (cleanedPhone.length < 10 || cleanedPhone.length > 11) {
-        errors.guardian = { ...errors.guardian, phone: 'Telefone inválido. Deve conter 10 ou 11 dígitos (com DDD).' };
+        errors.guardian = { ...errors.guardian, phone: 'Telefone inválido. Forneça um número com DDD, ex: (75) 99999-8888.' };
     }
   }
 
@@ -114,5 +114,40 @@ export const validateOccurrence = (data: FormData | Occurrence): ValidationError
     errors.immediateActions = 'Informar as providências imediatas é obrigatório.';
   }
 
+  return errors;
+};
+
+export const validateStep = (data: FormData | Occurrence, step: number): ValidationErrors => {
+  const errors: ValidationErrors = {};
+  const fullErrors = validateOccurrence(data);
+
+  switch (step) {
+    case 1: // Identification
+      if (fullErrors.schoolUnit) errors.schoolUnit = fullErrors.schoolUnit;
+      if (fullErrors.student && Object.keys(fullErrors.student).length > 0) {
+        errors.student = fullErrors.student;
+      }
+      break;
+    case 2: // Guardian & Occurrence Details
+      if (fullErrors.guardian && Object.keys(fullErrors.guardian).length > 0) {
+        errors.guardian = fullErrors.guardian;
+      }
+      if (fullErrors.occurrenceDate) errors.occurrenceDate = fullErrors.occurrenceDate;
+      if (fullErrors.occurrenceTime) errors.occurrenceTime = fullErrors.occurrenceTime;
+      if (fullErrors.location) errors.location = fullErrors.location;
+      if (fullErrors.occurrenceTypes) errors.occurrenceTypes = fullErrors.occurrenceTypes;
+      if (fullErrors.otherOccurrenceType) errors.otherOccurrenceType = fullErrors.otherOccurrenceType;
+      break;
+    case 3: // Description
+      if (fullErrors.detailedDescription) errors.detailedDescription = fullErrors.detailedDescription;
+      if (fullErrors.involvedPeople) errors.involvedPeople = fullErrors.involvedPeople;
+      if (fullErrors.immediateActions) errors.immediateActions = fullErrors.immediateActions;
+      break;
+    case 4: // Finalization (optional fields are not validated for step progression)
+      // No validation needed for just moving to the final step
+      break;
+    default:
+      break;
+  }
   return errors;
 };

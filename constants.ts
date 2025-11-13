@@ -54,6 +54,7 @@ export const REPORT_COLUMNS = [
   { key: 'immediateActions', label: 'Providências Imediatas' },
   { key: 'referrals', label: 'Encaminhamentos' },
   { key: 'socialServiceEvaluation', label: 'Avaliação Serviço Social' },
+  { key: 'observations', label: 'Observações Gerais' },
   { key: 'createdAt', label: 'Registrado em' },
   { key: 'updatedAt', label: 'Atualizado em' },
 ];

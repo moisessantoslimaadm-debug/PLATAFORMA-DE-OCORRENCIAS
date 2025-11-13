@@ -165,6 +165,7 @@ const EditOccurrenceModal: React.FC<EditOccurrenceModalProps> = ({ isOpen, occur
             <TextAreaInput label="Providências Imediatas Adotadas" id="immediateActions-edit" name="immediateActions" value={formData.immediateActions} onChange={handleChange} rows={2} required error={errors.immediateActions} />
             <TextAreaInput label="Encaminhamentos Realizados" id="referrals-edit" name="referrals" value={formData.referrals} onChange={handleChange} rows={2} />
             <TextAreaInput label="Avaliação do Serviço Social" id="socialServiceEvaluation-edit" name="socialServiceEvaluation" value={formData.socialServiceEvaluation} onChange={handleChange} rows={2} />
+            <TextAreaInput label="Observações Gerais (Opcional)" id="observations-edit" name="observations" value={formData.observations} onChange={handleChange} rows={2} />
           
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={onClose} className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">

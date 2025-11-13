@@ -26,6 +26,7 @@ const FIELD_LABELS: { [key: string]: string } = {
   immediateActions: 'Providências Imediatas',
   referrals: 'Encaminhamentos',
   socialServiceEvaluation: 'Avaliação Serviço Social',
+  observations: 'Observações Gerais',
   status: 'Status',
 };
 

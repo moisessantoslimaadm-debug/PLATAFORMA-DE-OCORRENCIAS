@@ -69,6 +69,7 @@ export interface Occurrence {
   immediateActions: string;
   referrals: string;
   socialServiceEvaluation?: string;
+  observations?: string;
   
   // Meta
   status: OccurrenceStatus;
