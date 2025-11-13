@@ -1,4 +1,5 @@
 import { Occurrence, OccurrenceStatus, OccurrenceType } from '../types';
+import { REPORT_COLUMNS } from '../constants';
 
 declare global {
     interface Window {
@@ -10,16 +11,36 @@ declare global {
 // Helper function to format date strings
 const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    // Add timezone to prevent date from shifting
-    const utcDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60000);
-    return new Intl.DateTimeFormat('pt-BR').format(utcDate);
+    try {
+        const date = new Date(dateString);
+        // Add timezone to prevent date from shifting
+        const utcDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60000);
+        return new Intl.DateTimeFormat('pt-BR').format(utcDate);
+    } catch (e) {
+        return dateString;
+    }
+};
+
+const getNestedProperty = (obj: any, path: string): string => {
+    const value = path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
+    if (path === 'occurrenceDate' || path === 'student.birthDate' || path === 'fillingDate') {
+        return formatDate(value);
+    }
+    if (path === 'occurrenceTypes') {
+        return Array.isArray(value) ? value.join(', ') : '';
+    }
+    return value ?? '';
 };
 
 // Generates a LIST of occurrences in a table format
-export const generatePdfReport = (occurrences: Occurrence[]): void => {
+export const generatePdfReport = (occurrences: Occurrence[], columnKeys: string[], groupBy: string): void => {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+        orientation: columnKeys.length > 6 ? 'landscape' : 'portrait',
+    });
+
+    const selectedColumns = REPORT_COLUMNS.filter(c => columnKeys.includes(c.key));
+    const tableHeaders = selectedColumns.map(c => c.label);
 
     doc.setFontSize(18);
     doc.setTextColor(34, 139, 34);
@@ -27,80 +48,117 @@ export const generatePdfReport = (occurrences: Occurrence[]): void => {
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Data de Geração: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
-
-    const tableColumn = ["ID", "Aluno", "Unidade Escolar", "Data Ocorr.", "Tipo Principal", "Status"];
-    const tableRows: any[][] = [];
-
-    occurrences.forEach(occ => {
-        const occurrenceData = [
-            occ.id.substring(4, 10),
-            occ.student.fullName,
-            occ.schoolUnit,
-            formatDate(occ.occurrenceDate),
-            occ.occurrenceTypes[0] || 'N/A',
-            occ.status,
-        ];
-        tableRows.push(occurrenceData);
-    });
     
-    doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 40,
-        theme: 'grid',
-        headStyles: { fillColor: [34, 139, 34] },
-        styles: { fontSize: 8 },
-    });
-    
+    let startY = 40;
+
+    const generateTableForData = (data: Occurrence[]) => {
+        const tableRows = data.map(occ => 
+            selectedColumns.map(col => getNestedProperty(occ, col.key))
+        );
+
+        doc.autoTable({
+            head: [tableHeaders],
+            body: tableRows,
+            startY,
+            theme: 'grid',
+            headStyles: { fillColor: [34, 139, 34] },
+            styles: { fontSize: 8, cellPadding: 1.5 },
+            didDrawPage: (data: any) => {
+                // We'll add footers after all tables are drawn
+            },
+        });
+        startY = (doc as any).lastAutoTable.finalY + 10;
+    };
+
+    if (groupBy && groupBy !== 'none') {
+        const groupedData: Record<string, Occurrence[]> = {};
+        occurrences.forEach(occ => {
+            let key = '';
+            if (groupBy === 'occurrenceDate') key = formatDate(occ.occurrenceDate);
+            else if (groupBy === 'mainType') key = occ.occurrenceTypes[0] || 'Não especificado';
+            else key = getNestedProperty(occ, groupBy);
+            
+            if (!groupedData[key]) {
+                groupedData[key] = [];
+            }
+            groupedData[key].push(occ);
+        });
+
+        const groupingLabel = groupBy === 'status' ? 'Status' : groupBy === 'occurrenceDate' ? 'Data' : 'Tipo Principal';
+
+        for (const groupName in groupedData) {
+            if (startY > 250) {
+              doc.addPage();
+              startY = 20;
+            }
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(22, 101, 52);
+            doc.text(`${groupingLabel}: ${groupName}`, 14, startY);
+            startY += 6;
+            generateTableForData(groupedData[groupName]);
+        }
+    } else {
+        generateTableForData(occurrences);
+    }
+
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, 287, { align: 'center' });
+        doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
     }
 
-    doc.save('relatorio_lista_ocorrencias.pdf');
+    doc.save('relatorio_ocorrencias.pdf');
 };
 
-// Generates an Excel sheet with detailed data for multiple occurrences
-export const generateExcelReport = (occurrences: Occurrence[]): void => {
-    const dataToExport = occurrences.map(occ => ({
-        'ID': occ.id,
-        'Status': occ.status,
-        'Unidade Escolar': occ.schoolUnit,
-        'Município': occ.municipality,
-        'UF': occ.uf,
-        'Data Preenchimento': formatDate(occ.fillingDate),
-        'Hora Preenchimento': occ.fillingTime,
-        'Aluno': occ.student.fullName,
-        'Data Nasc. Aluno': formatDate(occ.student.birthDate),
-        'Idade Aluno': occ.student.age,
-        'Ano/Série': occ.student.grade,
-        'Turno': occ.student.shift,
-        'Matrícula': occ.student.enrollmentId,
-        'Responsável': occ.guardian.fullName,
-        'Parentesco': occ.guardian.relationship,
-        'Telefone Resp.': occ.guardian.phone,
-        'Endereço Resp.': occ.guardian.address,
-        'Data Ocorrência': formatDate(occ.occurrenceDate),
-        'Hora Ocorrência': occ.occurrenceTime,
-        'Local': occ.location,
-        'Tipos de Ocorrência': occ.occurrenceTypes.join('; '),
-        'Outro Tipo (Detalhe)': occ.occurrenceTypes.includes(OccurrenceType.OTHER) ? occ.otherOccurrenceType : 'N/A',
-        'Descrição Detalhada': occ.detailedDescription,
-        'Pessoas Envolvidas': occ.involvedPeople,
-        'Providências Imediatas': occ.immediateActions,
-        'Encaminhamentos': occ.referrals,
-        'Avaliação Serviço Social': occ.socialServiceEvaluation,
-        'Registrado em': new Date(occ.createdAt).toLocaleString('pt-BR'),
-        'Atualizado em': new Date(occ.updatedAt).toLocaleString('pt-BR'),
-    }));
 
-    const worksheet = window.XLSX.utils.json_to_sheet(dataToExport);
-    worksheet["!cols"] = Object.keys(dataToExport[0] || {}).map(key => ({ wch: Math.max(key.length, 20) }));
+// Generates an Excel sheet with detailed data for multiple occurrences
+export const generateExcelReport = (occurrences: Occurrence[], columnKeys: string[], groupBy: string): void => {
+    const selectedColumns = REPORT_COLUMNS.filter(c => columnKeys.includes(c.key));
+
     const workbook = window.XLSX.utils.book_new();
-    window.XLSX.utils.book_append_sheet(workbook, worksheet, 'Ocorrências');
-    window.XLSX.writeFile(workbook, 'relatorio_detalhado_ocorrencias.xlsx');
+
+    const generateSheetForData = (data: Occurrence[], sheetName: string) => {
+        const dataToExport = data.map(occ => {
+            const row: Record<string, string> = {};
+            selectedColumns.forEach(col => {
+                row[col.label] = getNestedProperty(occ, col.key);
+            });
+            return row;
+        });
+
+        if (dataToExport.length === 0) return;
+
+        const worksheet = window.XLSX.utils.json_to_sheet(dataToExport);
+        worksheet["!cols"] = selectedColumns.map(c => ({ wch: Math.max(c.label.length, 25) }));
+        window.XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    };
+
+    if (groupBy && groupBy !== 'none') {
+        const groupedData: Record<string, Occurrence[]> = {};
+         occurrences.forEach(occ => {
+            let key = '';
+            if (groupBy === 'occurrenceDate') key = formatDate(occ.occurrenceDate);
+            else if (groupBy === 'mainType') key = occ.occurrenceTypes[0] || 'Não especificado';
+            else key = getNestedProperty(occ, groupBy);
+            
+            if (!groupedData[key]) {
+                groupedData[key] = [];
+            }
+            groupedData[key].push(occ);
+        });
+
+        for (const groupName in groupedData) {
+            // Sanitize sheet name for Excel
+            const safeSheetName = groupName.replace(/[:\\/?*[\]]/g, '').substring(0, 31);
+            generateSheetForData(groupedData[groupName], safeSheetName);
+        }
+    } else {
+        generateSheetForData(occurrences, 'Ocorrências');
+    }
+    
+    window.XLSX.writeFile(workbook, 'relatorio_ocorrencias.xlsx');
 };
 
 const validateOccurrenceForPdf = (occ: Occurrence): string[] => {

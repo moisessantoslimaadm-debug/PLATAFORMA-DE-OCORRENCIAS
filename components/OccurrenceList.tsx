@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react';
 import { Occurrence, OccurrenceStatus } from '../types';
 import OccurrenceItem from './OccurrenceItem';
 import { SearchIcon } from './icons/SearchIcon';
-import { PdfIcon } from './icons/PdfIcon';
-import { ExcelIcon } from './icons/ExcelIcon';
 import { BackupIcon } from './icons/BackupIcon';
 import { RestoreIcon } from './icons/RestoreIcon';
+import ReportModal, { ReportOptions } from './ReportModal';
+import { DocumentReportIcon } from './icons/DocumentReportIcon';
 
 interface OccurrenceListProps {
   occurrences: Occurrence[];
@@ -14,8 +14,7 @@ interface OccurrenceListProps {
   onUpdateStatus: (id: string, status: OccurrenceStatus) => void;
   onDeleteRequest: (id: string) => void;
   onEditRequest: (occurrence: Occurrence) => void;
-  onGeneratePdfList: (data: Occurrence[]) => void;
-  onGenerateExcel: (data: Occurrence[]) => void;
+  onGenerateReport: (data: Occurrence[], options: ReportOptions) => void;
   onGenerateSinglePdf: (data: Occurrence) => void;
   onBackup: () => void;
   onRestoreRequest: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -28,13 +27,13 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
   onUpdateStatus, 
   onDeleteRequest,
   onEditRequest,
-  onGeneratePdfList,
-  onGenerateExcel,
+  onGenerateReport,
   onGenerateSinglePdf,
   onBackup,
   onRestoreRequest,
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredByStatusOccurrences = occurrences.filter(occ => {
@@ -45,8 +44,14 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
   const handleRestoreClick = () => {
     fileInputRef.current?.click();
   };
+  
+  const handleGenerateReport = (options: ReportOptions) => {
+    onGenerateReport(filteredByStatusOccurrences, options);
+    setIsReportModalOpen(false);
+  };
 
   return (
+    <>
     <div className="bg-white p-6 rounded-lg shadow-lg border border-lime-200">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold text-lime-800 whitespace-nowrap">Histórico de Fichas</h2>
@@ -64,24 +69,19 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button 
-              onClick={() => onGeneratePdfList(filteredByStatusOccurrences)}
-              className="flex items-center gap-2 py-2 px-3 border border-red-200 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100 transition-colors"
-              aria-label="Gerar lista em PDF"
+             <button 
+              onClick={() => setIsReportModalOpen(true)}
+              className="flex items-center gap-2 py-2 px-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
+              aria-label="Gerar Relatório"
+              title="Gerar Relatório Customizado"
             >
-              <PdfIcon className="h-5 w-5" />
-            </button>
-            <button 
-              onClick={() => onGenerateExcel(filteredByStatusOccurrences)}
-              className="flex items-center gap-2 py-2 px-3 border border-green-200 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100 transition-colors"
-              aria-label="Gerar relatório em Excel"
-            >
-              <ExcelIcon className="h-5 w-5" />
+              <DocumentReportIcon className="h-5 w-5" />
             </button>
             <button
               onClick={onBackup}
               className="flex items-center gap-2 py-2 px-3 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors"
               aria-label="Fazer Backup"
+              title="Fazer Backup dos Dados"
             >
               <BackupIcon className="h-5 w-5" />
             </button>
@@ -89,6 +89,7 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
               onClick={handleRestoreClick}
               className="flex items-center gap-2 py-2 px-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
               aria-label="Restaurar Backup"
+              title="Restaurar a partir de um Backup"
             >
               <RestoreIcon className="h-5 w-5" />
             </button>
@@ -131,6 +132,12 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
         </div>
       )}
     </div>
+    <ReportModal
+      isOpen={isReportModalOpen}
+      onClose={() => setIsReportModalOpen(false)}
+      onSubmit={handleGenerateReport}
+    />
+    </>
   );
 };
 

@@ -9,6 +9,7 @@ import ConfirmationModal from './components/ConfirmationModal';
 import Toast from './components/Toast';
 import { generateExcelReport, generatePdfReport, generateSingleOccurrencePdf } from './utils/reportGenerator';
 import { seedOccurrences } from './utils/seedData';
+import { ReportOptions } from './components/ReportModal';
 
 const App: React.FC = () => {
   const [occurrences, setOccurrences] = useState<Occurrence[]>(() => {
@@ -100,14 +101,19 @@ const App: React.FC = () => {
     );
   }, [occurrences, searchTerm]);
   
-  const handleGeneratePdfList = useCallback((data: Occurrence[]) => {
-    addToast('Gerando lista em PDF...');
-    generatePdfReport(data);
-  }, [addToast]);
+  const handleGenerateCustomReport = useCallback((data: Occurrence[], options: ReportOptions) => {
+    const { format, columns, groupBy } = options;
+    if (columns.length === 0) {
+      addToast('Selecione ao menos uma coluna para gerar o relatório.', 'error');
+      return;
+    }
 
-  const handleGenerateExcel = useCallback((data: Occurrence[]) => {
-    addToast('Gerando relatório Excel...');
-    generateExcelReport(data);
+    addToast(`Gerando relatório em ${format.toUpperCase()}...`);
+    if (format === 'pdf') {
+      generatePdfReport(data, columns, groupBy);
+    } else {
+      generateExcelReport(data, columns, groupBy);
+    }
   }, [addToast]);
 
   const handleGenerateSinglePdf = useCallback((data: Occurrence) => {
@@ -197,8 +203,7 @@ const App: React.FC = () => {
               onUpdateStatus={updateOccurrenceStatus}
               onDeleteRequest={setDeletingOccurrenceId}
               onEditRequest={setEditingOccurrence}
-              onGeneratePdfList={handleGeneratePdfList}
-              onGenerateExcel={handleGenerateExcel}
+              onGenerateReport={handleGenerateCustomReport}
               onGenerateSinglePdf={handleGenerateSinglePdf}
               onBackup={handleBackup}
               onRestoreRequest={handleFileSelect}
@@ -206,6 +211,16 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+      <div
+        className="fixed bottom-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-lg flex items-center gap-3 border"
+      >
+        <img 
+          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Z0eXN2ejNzcHYxdTU3ajczZHN1d3NoZThpY2xucXFpZHMybXh1eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LpB0b8I8hczzW/giphy.gif" 
+          alt="Carlton Banks dancing"
+          className="w-16 h-16 rounded-md object-cover"
+        />
+        <span className="font-semibold text-lime-800 text-sm">By Moisés</span>
+      </div>
        <footer className="text-center p-4 text-sm text-lime-700">
         Plataforma de Gestão de Ocorrências Escolares © {new Date().getFullYear()} - Prefeitura Municipal de Itaberaba
       </footer>
