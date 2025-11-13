@@ -21,15 +21,29 @@ const DashboardAndList: React.FC<DashboardAndListProps> = ({
   addToast
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const filteredOccurrences = useMemo(() => {
-    if (!searchTerm.trim()) return occurrences;
-    return occurrences.filter(occ => 
-      occ.student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      occ.detailedDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      occ.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [occurrences, searchTerm]);
+    return occurrences
+      .filter(occ => {
+        if (!searchTerm.trim()) return true;
+        return (
+          occ.student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          occ.detailedDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          occ.id.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      })
+      .filter(occ => {
+        if (!startDate) return true;
+        // String comparison works for YYYY-MM-DD format and avoids timezone issues
+        return occ.occurrenceDate >= startDate;
+      })
+      .filter(occ => {
+        if (!endDate) return true;
+        return occ.occurrenceDate <= endDate;
+      });
+  }, [occurrences, searchTerm, startDate, endDate]);
 
   const handleGenerateCustomReport = useCallback((data: Occurrence[], options: ReportOptions) => {
     const { format, columns, groupBy } = options;
@@ -62,6 +76,10 @@ const DashboardAndList: React.FC<DashboardAndListProps> = ({
         occurrences={filteredOccurrences}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
         onUpdateStatus={updateOccurrenceStatus}
         onDeleteRequest={setDeletingOccurrenceId}
         onEditRequest={setEditingOccurrence}

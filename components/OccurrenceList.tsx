@@ -3,11 +3,16 @@ import { Occurrence, OccurrenceStatus } from '../types';
 import OccurrenceItem from './OccurrenceItem';
 import ReportModal, { ReportOptions } from './ReportModal';
 import { DocumentReportIcon } from './icons/DocumentReportIcon';
+import { TextInput } from './TextInput';
 
 interface OccurrenceListProps {
   occurrences: Occurrence[];
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
   onUpdateStatus: (id: string, status: OccurrenceStatus) => void;
   onDeleteRequest: (id: string) => void;
   onEditRequest: (occurrence: Occurrence) => void;
@@ -19,6 +24,10 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
   occurrences, 
   searchTerm,
   onSearchChange,
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
   onUpdateStatus, 
   onDeleteRequest,
   onEditRequest,
@@ -31,6 +40,12 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
     onGenerateReport(occurrences, options);
     setIsReportModalOpen(false);
   };
+
+  const handleClearDates = () => {
+    onStartDateChange('');
+    onEndDateChange('');
+  };
+
 
   return (
     <>
@@ -54,8 +69,7 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
         </button>
        </div>
 
-
-      <div className="mb-4">
+      <div className="mb-4 space-y-4">
         <input
           type="search"
           placeholder="Buscar por nome, ID ou descrição..."
@@ -63,6 +77,34 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-4 pr-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-gray-400"
         />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
+            <div className="sm:col-span-2">
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                <input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => onStartDateChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
+                />
+            </div>
+            <div className="sm:col-span-2">
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+                <input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => onEndDateChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
+                />
+            </div>
+            <button
+                onClick={handleClearDates}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+                Limpar
+            </button>
+        </div>
       </div>
 
       {occurrences.length === 0 ? (
@@ -71,7 +113,7 @@ const OccurrenceList: React.FC<OccurrenceListProps> = ({
             <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma ocorrência encontrada</h3>
-          <p className="mt-1 text-sm text-gray-500">Comece registrando uma nova ocorrência na aba "Registrar".</p>
+          <p className="mt-1 text-sm text-gray-500">Ajuste os filtros ou comece registrando uma nova ocorrência.</p>
         </div>
       ) : (
         <div className="space-y-3 pt-4 max-h-[60vh] overflow-y-auto pr-2">
